@@ -2,7 +2,7 @@
 
 **AI-Native SaaS Replacement Intelligence — Find the next billion-dollar opportunity in "too expensive" complaints.**
 
-[![CI](https://github.com/YOUR_USERNAME/TooExpensiveRadar/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/TooExpensiveRadar/actions/workflows/ci.yml)
+[![CI](https://github.com/fendouai/TooExpensiveRadar/actions/workflows/ci.yml/badge.svg)](https://github.com/fendouai/TooExpensiveRadar/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
@@ -43,7 +43,7 @@ Users constantly signal what they need:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/TooExpensiveRadar.git
+git clone https://github.com/fendouai/TooExpensiveRadar.git
 cd TooExpensiveRadar
 
 # Start everything with one command
@@ -56,7 +56,7 @@ Open [http://localhost:8000](http://localhost:8000)
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/TooExpensiveRadar.git
+git clone https://github.com/fendouai/TooExpensiveRadar.git
 cd TooExpensiveRadar
 
 # Create virtual environment
