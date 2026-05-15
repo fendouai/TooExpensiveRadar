@@ -1,0 +1,27 @@
+llm:
+  openai:
+    api_key: "your-openai-api-key"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+  minimax:
+    api_key: "your-minimax-api-key"
+    base_url: "https://api.minimax.chat/v1"
+    model: "MiniMax-M2.7"
+  claude:
+    api_key: "your-claude-api-key"
+    model: "claude-3-5-sonnet-20241023"
+  bochaai:
+    api_key: "your-bochaai-api-key"
+
+search_apis:
+  bochaai:
+    api_key: "your-bochaai-api-key"
+  tavily:
+    api_key: "your-tavily-api-key"
+
+github:
+  token: "your-github-pat-token"
+
+image_apis:
+  serper:
+    api_key: "your-serper-api-key"
