@@ -122,6 +122,37 @@ class Opportunity(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow, index=True)
 
 
+class AlternativeCandidate(SQLModel, table=True):
+    __tablename__ = "alternative_candidates"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    complaint_id: Optional[int] = Field(default=None, foreign_key="complaints.id", index=True)
+    original_software: str = Field(default="", index=True)
+    alternative_name: str = Field(default="", index=True)
+    pricing_tier: str = ""
+    affiliate_support: str = ""
+    affiliate_url: str = ""
+    price_advantage: str = ""
+    verification_source: str = ""
+    verification_details: str = ""
+    disruption_score_boost: float = Field(default=0.0)
+    created_at: datetime = Field(default_factory=_utcnow)
+
+
+class AlternativeCandidateRead(SQLModel):
+    id: int
+    original_software: str
+    alternative_name: str
+    pricing_tier: str
+    affiliate_support: str
+    affiliate_url: str
+    price_advantage: str
+    verification_source: str
+    verification_details: str
+    disruption_score_boost: float
+    created_at: datetime
+
+
 class BusinessLayer(SQLModel, table=True):
     __tablename__ = "business_layers"
 

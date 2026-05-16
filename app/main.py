@@ -16,6 +16,8 @@ from app.analyzer import analyze_text
 from app.database import engine, get_session, init_db, settings
 from app.llm import get_llm
 from app.models import (
+    AlternativeCandidate,
+    AlternativeCandidateRead,
     AsyncTask,
     AsyncTaskRead,
     Complaint,
@@ -918,4 +920,133 @@ def _persist_analysis(session: Session, req: TextIngestRequest) -> Opportunity:
     session.add(opp)
     session.commit()
     session.refresh(opp)
+
+    await _discover_alternatives_for_opportunity(session, opp, req.content)
+
     return opp
+
+
+async def _discover_alternatives_for_opportunity(
+    session: Session, opp: Opportunity, content: str
+) -> list[AlternativeCandidate]:
+    from app.alternatives.engine import AlternativeDiscoveryEngine
+
+    llm = None
+    llm_config = session.exec(select(LLMConfig).where(LLMConfig.enabled == True)).first()
+    if llm_config and llm_config.api_key:
+        llm = get_llm(llm_config.provider, llm_config.api_key, llm_config.model, llm_config.base_url)
+
+    engine = AlternativeDiscoveryEngine(llm=llm)
+    candidates = await engine.discover(content, opp.software, force_search=False)
+
+    stored = []
+    for c in candidates:
+        alt = AlternativeCandidate(
+            complaint_id=opp.complaint_id,
+            original_software=c.original_software,
+            alternative_name=c.alternative_name,
+            pricing_tier=c.pricing_tier,
+            affiliate_support=c.affiliate_support,
+            affiliate_url=c.affiliate_url,
+            price_advantage=c.price_advantage,
+            verification_source=c.verification_source,
+            verification_details=c.verification_details,
+            disruption_score_boost=c.disruption_score_boost,
+        )
+        session.add(alt)
+        stored.append(alt)
+
+    session.commit()
+    return stored
+
+
+@app.post("/api/alternatives/discover")
+def discover_alternatives(
+    text: str,
+    software: str,
+    force_search: bool = False,
+    session: Session = Depends(get_session),
+):
+    import asyncio
+    from app.alternatives.engine import AlternativeDiscoveryEngine
+
+    llm = None
+    llm_config = session.exec(select(LLMConfig).where(LLMConfig.enabled == True)).first()
+    if llm_config and llm_config.api_key:
+        llm = get_llm(llm_config.provider, llm_config.api_key, llm_config.model, llm_config.base_url)
+
+    engine = AlternativeDiscoveryEngine(llm=llm)
+    candidates = asyncio.run(engine.discover(text, software, force_search=force_search))
+
+    return {
+        "original_software": software,
+        "original_complaint": text,
+        "alternatives": [
+            {
+                "name": c.alternative_name,
+                "pricing_tier": c.pricing_tier,
+                "affiliate_support": c.affiliate_support,
+                "affiliate_url": c.affiliate_url,
+                "price_advantage": c.price_advantage,
+                "verification_source": c.verification_source,
+                "disruption_score_boost": c.disruption_score_boost,
+            }
+            for c in candidates
+        ],
+        "total_found": len(candidates),
+        "affiliate_confirmed": sum(1 for c in candidates if c.affiliate_support == "confirmed"),
+        "affiliate_likely": sum(1 for c in candidates if c.affiliate_support == "likely"),
+    }
+
+
+@app.get("/api/alternatives/known")
+def list_known_alternatives(session: Session = Depends(get_session)):
+    from app.alternatives.db import get_all_affiliate_saas
+
+    return {
+        "saas": get_all_affiliate_saas(),
+        "total": len(get_all_affiliate_saas()),
+    }
+
+
+@app.get("/api/alternatives/db-stats")
+def alternative_db_stats():
+    from app.alternatives.db import get_db_stats
+
+    return get_db_stats()
+
+
+@app.post("/api/alternatives/verify/{saas_name}")
+async def verify_saas_affiliate(saas_name: str, session: Session = Depends(get_session)):
+    from app.alternatives.search import search_multi
+    from app.alternatives.db import lookup_alternative
+
+    db_entry = lookup_alternative(saas_name)
+    if db_entry:
+        return {
+            "name": saas_name,
+            "in_database": True,
+            "affiliate_support": "confirmed" if db_entry.get("affiliate_support") else "undetermined",
+            "pricing_tier": db_entry.get("pricing_tier", "unknown"),
+            "affiliate_url": db_entry.get("affiliate_url", ""),
+            "verification_source": "prebuilt_db",
+        }
+
+    result = await search_multi(saas_name)
+    return {
+        "name": saas_name,
+        "in_database": False,
+        "affiliate_support": result.get("affiliate_support", "undetermined"),
+        "pricing_tier": result.get("pricing_tier", "unknown"),
+        "source_urls": result.get("source_urls", []),
+        "verification_source": "web_search",
+        "snippets": result.get("snippets", [])[:2],
+    }
+
+
+@app.get("/api/opportunities/{opp_id}/alternatives")
+def get_opportunity_alternatives(opp_id: int, session: Session = Depends(get_session)):
+    alts = session.exec(
+        select(AlternativeCandidate).where(AlternativeCandidate.complaint_id == opp_id)
+    ).all()
+    return list(alts)
