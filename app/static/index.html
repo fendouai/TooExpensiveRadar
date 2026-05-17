@@ -16,1121 +16,505 @@
             mono: ['JetBrains Mono', 'monospace'],
             sans: ['Inter', 'system-ui', 'sans-serif'],
           },
-          colors: {
-            surface: {
-              DEFAULT: '#18181b',
-              2: '#27272a',
-              3: '#3f3f46',
-            },
-            accent: {
-              DEFAULT: '#f97316',
-              hover: '#fb923c',
-              dim: 'rgba(249, 115, 22, 0.15)',
-            },
-          },
         },
       },
     }
   </script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 14px; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #09090b; color: #fafafa; min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #0f172a; min-height: 100vh; line-height: 1.5; }
     body::before {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(249, 115, 22, 0.08), transparent);
+      top: 0; left: 0; right: 0; height: 350px;
+      background: linear-gradient(180deg, #eef2ff 0%, transparent 100%);
       pointer-events: none;
       z-index: 0;
     }
-
     .font-mono { font-family: 'JetBrains Mono', monospace; }
-
-    /* Glass effect */
-    .glass {
-      background: rgba(24, 24, 27, 0.8);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(63, 63, 70, 0.5);
+    .glass-header {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
-
-    /* Glow effect */
-    .glow-accent { box-shadow: 0 0 20px rgba(249, 115, 22, 0.15); }
-    .glow-sm { box-shadow: 0 0 10px rgba(249, 115, 22, 0.1); }
-
-    /* Card hover */
-    .card-hover {
+    .card {
+      background: white;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 16px;
       transition: all 0.2s ease;
     }
-    .card-hover:hover {
-      transform: translateY(-2px);
-      border-color: rgba(82, 82, 91, 0.8);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    .card:hover { border-color: rgba(99,102,241,0.2); box-shadow: 0 4px 24px rgba(99,102,241,0.08); }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; transition: all 0.15s ease;
     }
-
-    /* Score bar animation */
-    .score-bar-fill {
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      box-shadow: 0 4px 12px rgba(99,102,241,0.3);
     }
-
-    /* Gradient border */
-    .gradient-border {
-      position: relative;
+    .btn-green {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white; transition: all 0.15s ease;
     }
-    .gradient-border::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), transparent 50%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
-    }
-
-    /* Toast */
+    .btn-green:hover { box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
     .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(24, 24, 27, 0.95);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(63, 63, 70, 0.5);
-      border-radius: 12px;
-      padding: 12px 18px;
-      font-size: 12px;
-      z-index: 300;
-      transform: translateY(80px);
-      opacity: 0;
+      position: fixed; bottom: 24px; right: 24px; background: white;
+      border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; padding: 12px 18px;
+      font-size: 12px; z-index: 300; transform: translateY(80px); opacity: 0;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      max-width: 320px;
+      display: flex; align-items: center; gap: 10px; max-width: 360px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { border-left: 3px solid #22c55e; }
+    .toast.success { border-left: 3px solid #10b981; }
     .toast.error { border-left: 3px solid #ef4444; }
-    .toast.info { border-left: 3px solid #3b82f6; }
-
-    /* Tab content */
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    /* Toggle switch */
-    .toggle {
-      width: 40px;
-      height: 22px;
-      border-radius: 11px;
-      background: #3f3f46;
-      cursor: pointer;
-      position: relative;
-      transition: background 0.2s;
-      flex-shrink: 0;
+    .toast.info { border-left: 3px solid #6366f1; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: fadeIn 0.35s ease forwards; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .animate-spin { animation: spin 1s linear infinite; }
+    input, select, textarea {
+      background: white; border: 1px solid rgba(0,0,0,0.1); color: #0f172a;
+      font-family: 'Inter', sans-serif; font-size: 12px; padding: 9px 12px;
+      border-radius: 10px; outline: none; transition: all 0.15s;
     }
-    .toggle.active { background: #f97316; }
-    .toggle::after {
-      content: '';
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: white;
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      transition: left 0.2s;
-    }
-    .toggle.active::after { left: 19px; }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
-
-    /* Keyboard shortcut kbd */
-    kbd {
-      background: #27272a;
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Progress ring */
-    .progress-ring { transform: rotate(-90deg); }
-    .progress-ring-circle {
-      transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      transform-origin: center;
-    }
-
-    /* Fade in animation */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in {
-      animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-    .stagger-1 { animation-delay: 50ms; }
-    .stagger-2 { animation-delay: 100ms; }
-    .stagger-3 { animation-delay: 150ms; }
-    .stagger-4 { animation-delay: 200ms; }
-
-    /* Pulse glow */
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 6px rgba(34, 197, 94, 0.3); }
-      50% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.5); }
-    }
-    .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-
-    /* Input focus ring */
     input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #f97316;
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+      border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
     }
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
+    .funnel-col { transition: all 0.2s; }
+    .funnel-col:hover { transform: translateY(-2px); }
+    .affiliate-badge {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px;
+    }
+    .level-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px;
+    }
+    .level1-badge { background: #f1f5f9; color: #64748b; }
+    .level2-badge { background: #fef3c7; color: #d97706; }
+    .level3-badge { background: #d1fae5; color: #059669; }
+    .alt-card {
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 10px; padding: 10px 14px;
+      transition: all 0.15s;
+    }
+    .alt-card:hover { border-color: #10b981; background: #f0fdf4; }
+    .section-header {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; color: #94a3b8;
+    }
+    kbd {
+      background: #f1f5f9; padding: 1px 5px; border-radius: 4px;
+      font-size: 10px; font-family: 'JetBrains Mono', monospace;
+      border: 1px solid #e2e8f0;
+    }
+    .progress-bar { transition: width 0.4s ease; }
   </style>
 </head>
 <body class="antialiased">
   <!-- Header -->
-  <header class="glass sticky top-0 z-50 px-6 h-[60px] flex justify-between items-center">
+  <header class="glass-header sticky top-0 z-50 px-4 h-16 flex justify-between items-center shadow-sm">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-orange-500/20">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-200">
         TE
       </div>
       <div>
-        <h1 class="font-mono font-semibold text-sm text-zinc-100 tracking-tight">Too Expensive Radar</h1>
-        <p class="text-[11px] text-zinc-500 font-normal">AI-native SaaS Intelligence</p>
+        <h1 class="font-mono font-semibold text-sm text-slate-900 tracking-tight">Too Expensive Radar</h1>
+        <p class="text-[10px] text-slate-500">SaaS Intelligence · Funnel Analyzer</p>
       </div>
     </div>
-
-    <nav class="flex items-center gap-1">
-      <button data-tab="feed" class="nav-btn active">
-        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
-        <span>Feed</span>
-      </button>
-      <button data-tab="import" class="nav-btn">
-        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
-        <span>Import</span>
-      </button>
-      <button data-tab="sources" class="nav-btn">
-        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
-        <span>Sources</span>
-      </button>
-      <button data-tab="llm" class="nav-btn">
-        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
-        <span>LLM</span>
-      </button>
-      <button data-tab="tasks" class="nav-btn">
-        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
-        <span>Tasks</span>
-      </button>
-    </nav>
-
     <div class="flex items-center gap-3">
-      <div id="apiStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-xs">
-        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500" id="apiDot"></span>
-        <span id="apiKeyName" class="font-mono text-zinc-400">Rule mode</span>
+      <div id="taskStatus" class="hidden items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-600">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+        <span id="taskStatusText">Processing...</span>
+        <div class="w-20 h-1.5 bg-indigo-100 rounded-full overflow-hidden">
+          <div id="taskProgress" class="h-full bg-indigo-500 progress-bar" style="width:0%"></div>
+        </div>
       </div>
+      <button onclick="fetchAllRss()" id="fetchBtn" class="px-3 py-1.5 text-xs font-semibold rounded-xl text-white btn-green">
+        📡 Fetch RSS
+      </button>
     </div>
   </header>
 
-  <div class="flex relative z-10">
-    <!-- Main Content -->
-    <main class="flex-1 p-6 overflow-y-auto max-h-[calc(100vh-60px)]">
-      <!-- Stats Row -->
-      <div class="grid grid-cols-4 gap-4 mb-6">
-        <div class="stat-card animate-fade-in stagger-1">
-          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-            <span>📊</span> Total Signals
-          </div>
-          <div class="font-mono text-3xl font-bold text-zinc-100 mt-2" id="statTotal">0</div>
-          <div class="text-[11px] text-zinc-500 mt-1" id="statComplaints">0 complaints</div>
-        </div>
-        <div class="stat-card animate-fade-in stagger-2">
-          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-            <span>⚡</span> Avg Disruption
-          </div>
-          <div class="font-mono text-3xl font-bold text-orange-500 mt-2" id="statAvg">0</div>
-          <div class="text-[11px] text-zinc-500 mt-1">disruption score</div>
-        </div>
-        <div class="stat-card animate-fade-in stagger-3">
-          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-            <span>🏆</span> Top Software
-          </div>
-          <div class="font-mono text-lg font-bold text-zinc-100 mt-2" id="statSoftware">-</div>
-          <div class="text-[11px] text-zinc-500 mt-1" id="statSoftwareCount"></div>
-        </div>
-        <div class="stat-card animate-fade-in stagger-4">
-          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-            <span>🤖</span> Engine
-          </div>
-          <div class="font-mono text-lg font-bold text-zinc-100 mt-2" id="statLlm">Rule</div>
-          <div class="text-[11px] text-zinc-500 mt-1" id="statLlmSub">no API key</div>
-        </div>
-      </div>
+  <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
 
-      <!-- Feed Tab -->
-      <div class="tab-content active" id="tab-feed">
-        <div class="flex justify-between items-center mb-4">
-          <div class="flex items-center gap-3">
-            <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-              <span class="text-base">📡</span> Opportunity Feed
+    <!-- Funnel Summary Bar -->
+    <div id="funnelSummary" class="grid grid-cols-3 gap-3 mb-6">
+      <div class="card p-4 text-center animate-in">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">📥 Total Scraped</div>
+        <div class="font-mono text-2xl font-bold text-slate-900" id="statTotal">0</div>
+      </div>
+      <div class="card p-4 text-center animate-in" style="animation-delay:50ms">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">💸 Expensive SaaS</div>
+        <div class="font-mono text-2xl font-bold text-amber-500" id="statL1">0</div>
+      </div>
+      <div class="card p-4 text-center animate-in" style="animation-delay:100ms">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">✅ Has Cheaper Alt</div>
+        <div class="font-mono text-2xl font-bold text-blue-500" id="statL2">0</div>
+      </div>
+    </div>
+
+    <!-- Level 3: Affiliate - HERO SECTION -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-sm shadow-lg shadow-emerald-200">💰</div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              Affiliate Opportunities
+              <span id="l3Count" class="affiliate-badge">0</span>
             </h2>
-            <span class="px-2 py-0.5 text-[10px] font-bold bg-orange-500/10 text-orange-500 rounded-md uppercase tracking-wider" id="feedCount">0</span>
+            <p class="text-[11px] text-slate-500">Confirmed cheaper alternatives with affiliate programs — start earning commissions</p>
           </div>
         </div>
-
-        <!-- Filters -->
-        <div class="flex gap-2 mb-4 flex-wrap">
-          <select id="filterScore" class="bg-zinc-900 border border-zinc-700/50 text-zinc-300 text-xs px-3 py-2 rounded-lg min-w-[120px]">
-            <option value="0">All Scores</option>
-            <option value="6">Score ≥ 6</option>
-            <option value="7">Score ≥ 7</option>
-            <option value="8">Score ≥ 8</option>
-            <option value="9">Score ≥ 9</option>
-          </select>
-          <select id="filterCategory" class="bg-zinc-900 border border-zinc-700/50 text-zinc-300 text-xs px-3 py-2 rounded-lg min-w-[140px]">
-            <option value="">All Categories</option>
-            <option value="CRM / Marketing Automation">CRM</option>
-            <option value="Automation">Automation</option>
-            <option value="Project Management">Project Mgmt</option>
-            <option value="Proposal / Document">Proposal</option>
-            <option value="Customer Support">Support</option>
-            <option value="Internal Tools / Database">Internal Tools</option>
-          </select>
-          <input type="text" id="filterSoftware" placeholder="Filter by software..." class="bg-zinc-900 border border-zinc-700/50 text-zinc-300 text-xs px-3 py-2 rounded-lg min-w-[160px] placeholder:text-zinc-600" />
-          <button onclick="loadFeed()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Filter</button>
-          <button onclick="resetFilters()" class="px-3 py-2 bg-transparent hover:bg-zinc-800 text-zinc-500 text-xs font-medium rounded-lg transition-colors">Reset</button>
-        </div>
-
-        <!-- Score Legend -->
-        <div class="flex gap-4 mb-4 flex-wrap">
-          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
-            <div class="w-4 h-1 rounded bg-red-500"></div>Pricing
-          </div>
-          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
-            <div class="w-4 h-1 rounded bg-blue-500"></div>Bloat
-          </div>
-          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
-            <div class="w-4 h-1 rounded bg-green-500"></div>SMB
-          </div>
-          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
-            <div class="w-4 h-1 rounded bg-orange-500"></div>AI
-          </div>
-          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
-            <div class="w-4 h-1 rounded bg-yellow-500"></div>Feasibility
-          </div>
-        </div>
-
-        <!-- Feed -->
-        <div class="space-y-3" id="feed"></div>
+        <button onclick="fetchAllRss()" class="text-xs text-emerald-600 font-semibold hover:text-emerald-700 transition-colors">↻ Refresh</button>
       </div>
 
-      <!-- Import Tab -->
-      <div class="tab-content" id="tab-import">
-        <div class="flex items-center gap-2 mb-6">
-          <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-            <span class="text-base">📥</span> Import Data
-          </h2>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>✏️</span> Manual Text Input
-          </h3>
-          <div class="space-y-3">
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Platform</label>
-              <select id="importPlatform" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg">
-                <option value="manual">Manual</option>
-                <option value="reddit">Reddit</option>
-                <option value="twitter">Twitter/X</option>
-                <option value="g2">G2 Reviews</option>
-                <option value="capterra">Capterra</option>
-                <option value="hackernews">Hacker News</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Source URL (optional)</label>
-              <input type="text" id="importUrl" placeholder="https://..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Content</label>
-              <textarea id="importContent" rows="4" placeholder="Paste user complaint here..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y"></textarea>
-            </div>
-            <button onclick="importText()" class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Analyze & Generate Opportunity</button>
-          </div>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>📄</span> CSV Import
-          </h3>
-          <div class="mb-3">
-            <input type="file" id="csvFile" accept=".csv" class="text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:bg-zinc-800 file:border file:border-zinc-700 file:rounded-lg file:text-zinc-300 file:text-xs file:font-medium file:cursor-pointer" />
-            <p class="text-[10px] text-zinc-500 mt-1.5">Required columns: platform, source_url, author, content</p>
-          </div>
-          <button onclick="importCSV()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Import CSV</button>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
-            <span>🌱</span> Seed Data
-          </h3>
-          <p class="text-xs text-zinc-500 mb-3">Load 15 pre-built samples demonstrating common SaaS pricing complaints across different categories.</p>
-          <button onclick="seedData()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Load 15 Seed Samples</button>
+      <div id="level3List" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div class="card p-8 text-center col-span-full" id="l3Empty">
+          <div class="text-5xl mb-3">🔍</div>
+          <h3 class="text-sm font-medium text-slate-700 mb-1">No affiliate opportunities yet</h3>
+          <p class="text-xs text-slate-400 mb-4">Click "📡 Fetch RSS" to start analyzing SaaS complaints</p>
+          <button onclick="fetchAllRss()" class="px-5 py-2.5 text-xs font-semibold rounded-xl text-white btn-green">📡 Fetch &amp; Analyze Now</button>
         </div>
       </div>
+    </div>
 
-      <!-- Sources Tab -->
-      <div class="tab-content" id="tab-sources">
-        <div class="flex justify-between items-center mb-4">
-          <div class="flex items-center gap-3">
-            <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-              <span class="text-base">🔗</span> Data Sources
-            </h2>
-            <span class="px-2 py-0.5 text-[10px] font-bold bg-orange-500/10 text-orange-500 rounded-md" id="dsActiveCount">0 active</span>
-          </div>
-        </div>
-        <div class="space-y-2 mb-6" id="dsList"></div>
+    <!-- Divider -->
+    <div class="border-t border-slate-200 my-6"></div>
 
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>📡</span> RSS Feeds
-          </h3>
-          <div id="rssFeedList" class="space-y-2 mb-3"></div>
-          <div class="flex gap-2 mb-2">
-            <input type="text" id="rssFeedUrl" placeholder="https://example.com/feed.xml" class="flex-1 bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
-            <input type="text" id="rssFeedName" placeholder="Feed name" class="w-28 bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
-            <button onclick="addRssFeed()" class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Add</button>
-          </div>
-          <button onclick="collectRss()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors mt-2">▶ Collect Now</button>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>🔔</span> Notification Channels
-          </h3>
-          <div class="grid grid-cols-2 gap-2 mb-3" id="channelGrid"></div>
-          <div id="notificationConfig" class="hidden space-y-3">
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Channel Config (JSON)</label>
-              <textarea id="notifConfigJson" rows="2" placeholder='{"webhook_url": "https://..."}' class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y"></textarea>
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Message Content</label>
-              <textarea id="notifContent" rows="2" placeholder="Alert content..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y"></textarea>
-            </div>
-            <button onclick="sendNotification()" class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Send Test Notification</button>
-          </div>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>⏰</span> Scheduler
-          </h3>
-          <div class="flex flex-wrap gap-2 mb-3" id="schedulerPresets">
-            <button class="preset-btn active" data-preset="always_on">Always On</button>
-            <button class="preset-btn" data-preset="morning_evening">Morning & Evening</button>
-            <button class="preset-btn" data-preset="office_hours">Office Hours</button>
-            <button class="preset-btn" data-preset="night_owl">Night Owl</button>
-          </div>
-          <div id="schedulerStatus" class="text-xs text-zinc-500 mt-2"></div>
-        </div>
-      </div>
-
-      <!-- LLM Tab -->
-      <div class="tab-content" id="tab-llm">
-        <div class="flex items-center gap-2 mb-6">
-          <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-            <span class="text-base">🤖</span> LLM Configuration
-          </h2>
-        </div>
-
-        <div id="llmActiveRow" class="flex items-center gap-2 px-3 py-2 bg-green-500/10 border border-green-500/20 rounded-lg mb-4 text-xs text-green-400">
-          <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-          <span id="llmActiveText">Rule-based mode (no API key)</span>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>🦀</span> Claude <span class="px-1.5 py-0.5 text-[9px] font-bold bg-orange-500/10 text-orange-500 rounded uppercase tracking-wider">Recommended</span>
-          </h3>
-          <div class="space-y-3">
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">API Key</label>
-              <input type="password" id="claudeKey" placeholder="sk-ant-..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Model</label>
-              <select id="claudeModel" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg">
-                <option value="claude-3-5-sonnet-20241023">Claude 3.5 Sonnet (Recommended)</option>
-                <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-                <option value="claude-3-haiku-20240229">Claude 3 Haiku</option>
-              </select>
-            </div>
-            <button onclick="saveLlMConfig('claude')" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Save Claude</button>
-          </div>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>🤖</span> MiniMax / OpenAI
-          </h3>
-          <div class="space-y-3">
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">API Key</label>
-              <input type="password" id="openaiKey" placeholder="sk-cp-..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Model</label>
-              <select id="openaiModel" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg">
-                <option value="MiniMax-Text-01">MiniMax-Text-01 (Recommended)</option>
-                <option value="gpt-4o">GPT-4o</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Base URL</label>
-              <input type="text" id="openaiBaseUrl" placeholder="https://api.minimax.chat/v1" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
-            </div>
-            <button onclick="saveLlMConfig('openai')" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Save MiniMax/OpenAI</button>
-          </div>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>📋</span> Current Configuration
-          </h3>
-          <div id="llmStatusList"></div>
-        </div>
-
-        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
-          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
-            <span>🎯</span> AI Filter Interests
-          </h3>
-          <div class="mb-3">
-            <textarea id="aiFilterInterests" rows="5" placeholder="#Pricing&#10;pricing: too expensive, overpriced, cost too much&#10;..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y font-mono"></textarea>
-          </div>
-          <button onclick="saveAiFilterInterests()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Save AI Filter</button>
-        </div>
-      </div>
-
-      <!-- Tasks Tab -->
-      <div class="tab-content" id="tab-tasks">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-            <span class="text-base">⚙️</span> Background Tasks
-          </h2>
-          <button onclick="loadTasks()" class="px-3 py-1.5 bg-transparent hover:bg-zinc-800 text-zinc-500 text-xs font-medium rounded-lg transition-colors">↻ Refresh</button>
-        </div>
-        <div class="space-y-2" id="taskList"></div>
-      </div>
-    </main>
-
-    <!-- Sidebar -->
-    <aside class="w-[280px] bg-zinc-950/50 border-l border-zinc-800/50 p-5 overflow-y-auto max-h-[calc(100vh-60px)]">
-      <div class="mb-6">
-        <button onclick="seedData()" class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-orange-500/10">🌱 Load Seed Data</button>
-        <button onclick="clearAll()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-medium rounded-lg border border-zinc-700/50 transition-colors mt-2">🗑️ Clear All</button>
-      </div>
-
-      <div class="mb-6">
-        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
-          Scoring Weights
-          <span class="flex-1 h-px bg-zinc-800"></span>
-        </h4>
-        <div class="space-y-2 text-xs">
-          <div class="flex justify-between"><span class="text-zinc-400">💰 Pricing Pain</span><span class="font-bold text-red-400">30%</span></div>
-          <div class="flex justify-between"><span class="text-zinc-400">🤖 AI Compression</span><span class="font-bold text-orange-400">22%</span></div>
-          <div class="flex justify-between"><span class="text-zinc-400">📦 Feature Bloat</span><span class="font-bold text-blue-400">18%</span></div>
-          <div class="flex justify-between"><span class="text-zinc-400">🏢 SMB Overkill</span><span class="font-bold text-green-400">16%</span></div>
-          <div class="flex justify-between"><span class="text-zinc-400">✅ Feasibility</span><span class="font-bold text-yellow-400">14%</span></div>
-        </div>
-      </div>
-
-      <div class="mb-6">
-        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
-          Software Catalog
-          <span class="flex-1 h-px bg-zinc-800"></span>
-        </h4>
-        <div class="space-y-1.5 text-[11px] text-zinc-500">
-          <div><span class="text-zinc-400">CRM</span> — HubSpot, Salesforce, Pipedrive</div>
-          <div><span class="text-zinc-400">Proposal</span> — PandaDoc, DocuSign</div>
-          <div><span class="text-zinc-400">Automation</span> — Zapier, Make, n8n</div>
-          <div><span class="text-zinc-400">PM</span> — Jira, Monday, Asana, ClickUp</div>
-          <div><span class="text-zinc-400">Support</span> — Zendesk, Intercom</div>
-          <div><span class="text-zinc-400">Internal</span> — Airtable, Smartsheet, Notion</div>
-        </div>
-      </div>
-
-      <div class="mb-6">
-        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
-          System Status
-          <span class="flex-1 h-px bg-zinc-800"></span>
-        </h4>
-        <div class="space-y-0 text-xs">
-          <div class="flex justify-between py-2 border-b border-zinc-800/50"><span class="text-zinc-400">Engine</span><span id="engineStatus" class="text-orange-400">Rule-based</span></div>
-          <div class="flex justify-between py-2 border-b border-zinc-800/50"><span class="text-zinc-400">LLM</span><span id="llmStatusSidebar" class="text-zinc-500">Not configured</span></div>
-          <div class="flex justify-between py-2 border-b border-zinc-800/50"><span class="text-zinc-400">Database</span><span class="text-green-400">SQLite</span></div>
-          <div class="flex justify-between py-2"><span class="text-zinc-400">Data Sources</span><span id="dsCount" class="text-yellow-400">0 active</span></div>
-        </div>
-      </div>
-
+    <!-- Level 1 + Level 2 side by side -->
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      <!-- Level 1: All "too expensive" opportunities -->
       <div>
-        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
-          Keyboard Shortcuts
-          <span class="flex-1 h-px bg-zinc-800"></span>
-        </h4>
-        <div class="space-y-1.5 text-[11px] text-zinc-500">
-          <div><kbd>F</kbd> Feed</div>
-          <div><kbd>I</kbd> Import</div>
-          <div><kbd>S</kbd> Sources</div>
-          <div><kbd>L</kbd> LLM Config</div>
-          <div><kbd>T</kbd> Tasks</div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-sm">💸</div>
+          <h3 class="text-sm font-bold text-slate-900">Too Expensive SaaS</h3>
+          <span id="l1Count" class="level-badge level1-badge">0</span>
+          <button onclick="toggleSection('l1')" class="ml-auto text-xs text-slate-400 hover:text-slate-600">
+            <span id="l1Toggle">▼</span>
+          </button>
+        </div>
+        <div id="level1Section">
+          <div id="level1List" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            <div class="card p-6 text-center" id="l1Empty">
+              <div class="text-3xl mb-2">📭</div>
+              <p class="text-xs text-slate-400">No opportunities yet</p>
+            </div>
+          </div>
         </div>
       </div>
-    </aside>
+
+      <!-- Level 2: Has cheaper alternative -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-sm">🔄</div>
+          <h3 class="text-sm font-bold text-slate-900">Has Cheaper Alternative</h3>
+          <span id="l2Count" class="level-badge level2-badge">0</span>
+          <button onclick="toggleSection('l2')" class="ml-auto text-xs text-slate-400 hover:text-slate-600">
+            <span id="l2Toggle">▼</span>
+          </button>
+        </div>
+        <div id="level2Section">
+          <div id="level2List" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            <div class="card p-6 text-center" id="l2Empty">
+              <div class="text-3xl mb-2">📭</div>
+              <p class="text-xs text-slate-400">No opportunities yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw Signals -->
+    <div class="border-t border-slate-200 pt-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-sm">📄</div>
+          <h3 class="text-sm font-bold text-slate-900">Raw Signals</h3>
+          <span id="rawCount" class="level-badge level1-badge">0</span>
+        </div>
+        <button onclick="toggleSection('raw')" class="text-xs text-slate-400 hover:text-slate-600">
+          <span id="rawToggle">▼</span>
+        </button>
+      </div>
+      <div id="rawSection">
+        <div id="rawList" class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+          <div class="text-xs text-slate-400 py-4 text-center" id="rawEmpty">No raw signals</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="toast" id="toastContent"></div>
 
   <script src="/static/app.js"></script>
   <script>
-    // ── Nav Button Styles ──
-    const style = document.createElement('style');
-    style.textContent = `
-      .nav-btn {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: transparent;
-        border: none;
-        color: #a1a1aa;
-        font-family: 'Inter', sans-serif;
-        font-size: 12px;
-        font-weight: 500;
-        padding: 7px 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-      .nav-btn:hover { color: #fafafa; background: #27272a; }
-      .nav-btn.active { color: #f97316; background: rgba(249, 115, 22, 0.15); }
-      .nav-btn.active span:first-child { background: #f97316; }
-      .nav-btn span:first-child { transition: background 0.15s; }
-      .stat-card {
-        background: #18181b;
-        border: 1px solid #3f3f46;
-        border-radius: 14px;
-        padding: 16px 18px;
-      }
-      .preset-btn {
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
-        background: #27272a;
-        border: 1px solid #3f3f46;
-        color: #a1a1aa;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-      .preset-btn:hover { border-color: #52525b; color: #fafafa; }
-      .preset-btn.active { background: rgba(249, 115, 22, 0.15); border-color: #f97316; color: #f97316; }
-    `;
-    document.head.appendChild(style);
+    // ─── State ───────────────────────────────────────────────────────────────────
+    let funnelData = { level1: [], level2: [], level3: [] };
+    let currentTaskId = null;
+    let pollTimer = null;
 
-    // ── API Helper ──
+    // ─── API Helper ─────────────────────────────────────────────────────────────
     async function api(path, options = {}) {
       try {
         const res = await fetch(path, options);
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || `HTTP ${res.status}`);
-        }
+        if (!res.ok) { const t = await res.text(); throw new Error(t || `HTTP ${res.status}`); }
         return res.json();
       } catch (e) { throw e; }
     }
 
-    // ── Toast ──
+    // ─── Toast ──────────────────────────────────────────────────────────────────
     function showToast(msg, type = 'success') {
-      const toast = document.getElementById('toastContent');
-      toast.textContent = msg;
-      toast.className = `toast ${type} show`;
-      setTimeout(() => toast.classList.remove('show'), 3500);
+      const t = document.getElementById('toastContent');
+      t.textContent = msg; t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 4000);
     }
 
-    // ── Format Helpers ──
-    function fmtTop(items) { return items && items.length ? `${items[0][0]}` : '-'; }
-    function fmtCount(items) { return items && items.length ? `${items[0][1]} mentions` : ''; }
-    function timeAgo(dateStr) {
-      const d = new Date(dateStr);
-      const now = new Date();
-      const diff = Math.floor((now - d) / 1000);
-      if (diff < 60) return `${diff}s ago`;
-      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-      return `${Math.floor(diff / 86400)}d ago`;
+    // ─── Section Toggle ─────────────────────────────────────────────────────────
+    function toggleSection(id) {
+      const el = document.getElementById(id + 'Section');
+      const btn = document.getElementById(id + 'Toggle');
+      if (el.style.display === 'none') { el.style.display = ''; btn.textContent = '▼'; }
+      else { el.style.display = 'none'; btn.textContent = '▶'; }
     }
 
-    // ── Load Stats ──
-    async function loadStats() {
-      try {
-        const s = await api('/api/stats');
-        document.getElementById('statTotal').textContent = s.total;
-        document.getElementById('statAvg').textContent = s.avg_score;
-        document.getElementById('statSoftware').textContent = fmtTop(s.top_software);
-        document.getElementById('statSoftwareCount').textContent = fmtCount(s.top_software);
-        document.getElementById('statComplaints').textContent = `${s.total_complaints} complaints`;
-        document.getElementById('statLlm').textContent = s.llm_enabled ? 'LLM' : 'Rule';
-        document.getElementById('statLlmSub').textContent = s.llm_enabled ? 'active' : 'no API key';
-        document.getElementById('statLlm').className = s.llm_enabled ? 'font-mono text-lg font-bold text-orange-500' : 'font-mono text-lg font-bold text-zinc-100';
-
-        document.getElementById('engineStatus').textContent = s.llm_enabled ? '● LLM' : '● Rule-based';
-        document.getElementById('llmStatusSidebar').textContent = s.llm_enabled ? '● Active' : 'Not configured';
-        document.getElementById('dsCount').textContent = `${s.total_datasources} active`;
-
-        const apiStatus = document.getElementById('apiStatus');
-        const apiDot = document.getElementById('apiDot');
-        const apiKeyName = document.getElementById('apiKeyName');
-        if (s.llm_enabled) {
-          apiDot.className = 'w-1.5 h-1.5 rounded-full bg-green-500 pulse-glow';
-          apiKeyName.textContent = 'LLM Active';
-        } else {
-          apiDot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
-          apiKeyName.textContent = 'Rule mode';
-        }
-      } catch (e) { console.error('stats error', e); }
+    // ─── Time formatting ──────────────────────────────────────────────────────────
+    function timeAgo(d) {
+      if (!d) return '';
+      const s = Math.floor((Date.now() - new Date(d)) / 1000);
+      if (s < 60) return s + 's ago';
+      if (s < 3600) return Math.floor(s / 60) + 'm ago';
+      if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+      return Math.floor(s / 86400) + 'd ago';
     }
 
-    // ── Render Opportunity Card ──
-    function renderOpp(o) {
-      const scoreWidth = (score) => Math.min(100, score * 10) + '%';
+    // ─── Render: Level 3 (Affiliate) ───────────────────────────────────────────
+    function renderLevel3(opp) {
+      const affAlts = opp.alternatives.filter(a => a.affiliate_support === 'confirmed');
+      if (!affAlts.length) return '';
+      const affAlt = affAlts[0];
       return `
-        <article class="card-hover bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-5 animate-fade-in">
-          <div class="flex justify-between items-start mb-3 gap-3">
+        <div class="card p-5 funnel-col animate-in">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <h4 class="font-bold text-slate-900 text-sm">${opp.software}</h4>
+                <span class="affiliate-badge">💰 AFFILIATE</span>
+              </div>
+              <span class="text-[10px] text-slate-400">${opp.category}</span>
+            </div>
+            <div class="text-right">
+              <div class="font-mono text-xl font-bold text-indigo-500">${opp.disruption_score}</div>
+              <div class="text-[9px] text-slate-400">score</div>
+            </div>
+          </div>
+
+          ${opp.complaint_summary ? `<p class="text-xs text-slate-600 mb-3 leading-relaxed">${opp.complaint_summary.slice(0, 100)}${opp.complaint_summary.length > 100 ? '...' : ''}</p>` : ''}
+
+          ${opp.evidence ? `<p class="text-[11px] text-slate-400 italic mb-3 border-l-2 border-slate-200 pl-2 leading-relaxed">"${opp.evidence.slice(0, 80)}${opp.evidence.length > 80 ? '...' : ''}"</p>` : ''}
+
+          <div class="alt-card mb-3">
+            <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">💚 Recommended Alternative</div>
+            <div class="font-semibold text-sm text-slate-900 mb-0.5">${affAlt.alternative_name}</div>
+            <div class="text-[11px] text-slate-500">${affAlt.pricing_tier} · ${affAlt.price_advantage || 'competitive pricing'}</div>
+          </div>
+
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-3">
+            <div class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">🔗 Affiliate Link</div>
+            <a href="${affAlt.affiliate_url}" target="_blank" class="text-xs text-emerald-700 font-mono break-all hover:text-emerald-900 hover:underline">${affAlt.affiliate_url}</a>
+          </div>
+
+          ${opp.source_url ? `<a href="${opp.source_url}" target="_blank" class="text-[10px] text-slate-400 hover:text-slate-600 flex items-center gap-1">↗ source ${timeAgo(opp.created_at)}</a>` : ''}
+        </div>`;
+    }
+
+    // ─── Render: Level 1 / Level 2 ───────────────────────────────────────────────
+    function renderOppCard(opp, showAlts) {
+      const affCount = opp.alternatives.filter(a => a.affiliate_support === 'confirmed').length;
+      const hasAff = affCount > 0;
+      return `
+        <div class="card p-4 animate-in ${hasAff ? 'border-emerald-200 bg-emerald-50/30' : ''}">
+          <div class="flex items-start justify-between mb-2">
             <div class="flex items-center gap-2 flex-wrap">
-              <h3 class="text-sm font-bold text-zinc-100">${o.software}</h3>
-              <span class="px-2 py-0.5 text-[10px] font-semibold bg-blue-500/10 text-blue-400 rounded-md">${o.category}</span>
+              <h4 class="font-semibold text-slate-900 text-sm">${opp.software}</h4>
+              ${hasAff ? '<span class="affiliate-badge">💰</span>' : ''}
+              <span class="text-[10px] text-slate-400">${opp.category}</span>
             </div>
-            <div class="flex flex-col items-center min-w-[48px]">
-              <strong class="font-mono text-xl font-bold text-orange-500 leading-none">${o.disruption_score}</strong>
-              <span class="text-[9px] uppercase tracking-wider text-zinc-500 mt-1">score</span>
+            <div class="font-mono text-lg font-bold text-indigo-500">${opp.disruption_score}</div>
+          </div>
+
+          ${opp.complaint_summary ? `<p class="text-xs text-slate-600 mb-2 leading-relaxed">${opp.complaint_summary.slice(0, 80)}${opp.complaint_summary.length > 80 ? '...' : ''}</p>` : ''}
+
+          ${opp.evidence ? `<p class="text-[11px] text-slate-400 italic mb-2 border-l-2 border-slate-200 pl-2 leading-relaxed">"${opp.evidence.slice(0, 60)}${opp.evidence.length > 60 ? '...' : ''}"</p>` : ''}
+
+          ${showAlts && opp.alternatives && opp.alternatives.length ? `
+            <div class="mt-2 space-y-1.5">
+              ${opp.alternatives.slice(0, 4).map(a => `
+                <div class="alt-card flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    ${a.affiliate_support === 'confirmed' ? '<span class="text-emerald-500 text-[10px]">💰</span>' : a.disruption_score_boost > 0 ? '<span class="text-amber-500 text-[10px]">🔶</span>' : '<span class="text-slate-300 text-[10px]">○</span>'}
+                    <span class="text-xs font-medium text-slate-700">${a.alternative_name}</span>
+                    <span class="text-[10px] text-slate-400">${a.pricing_tier}</span>
+                  </div>
+                  ${a.affiliate_support === 'confirmed' && a.affiliate_url ? `<a href="${a.affiliate_url}" target="_blank" class="text-[10px] text-emerald-600 font-semibold hover:underline whitespace-nowrap">Apply ↗</a>` : ''}
+                </div>
+              `).join('')}
             </div>
-          </div>
-          <div class="flex items-center gap-3 text-[11px] text-zinc-500 mb-3 flex-wrap">
-            <span class="font-mono">${timeAgo(o.created_at)}</span>
-            <span>${o.actual_workflow}</span>
-            ${o.pricing_signal ? '<span class="text-red-400">💰 pricing</span>' : ''}
-            ${o.bloat_signal ? '<span class="text-blue-400">📦 bloat</span>' : ''}
-            ${o.smb_signal ? '<span class="text-green-400">🏢 smb</span>' : ''}
-          </div>
-          <div class="grid grid-cols-2 gap-2 mb-3">
-            <div class="bg-zinc-800/80 rounded-lg p-3">
-              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Complaint</div>
-              <div class="text-xs text-zinc-300 leading-relaxed">${o.complaint_summary}</div>
-            </div>
-            <div class="bg-zinc-800/80 rounded-lg p-3">
-              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Workflow</div>
-              <div class="text-xs text-zinc-300 leading-relaxed">${o.actual_workflow}</div>
-            </div>
-          </div>
-          <div class="bg-zinc-800/80 rounded-lg p-3 mb-3">
-            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">AI-native Replacement</div>
-            <div class="text-xs text-orange-400 leading-relaxed">${o.ai_native_replacement}</div>
-          </div>
-          ${o.evidence ? `<div class="text-[11px] text-zinc-500 italic border-l-2 border-zinc-700 pl-3 mb-3 leading-relaxed">"${o.evidence.slice(0, 200)}${o.evidence.length > 200 ? '...' : ''}"</div>` : ''}
-          <div class="flex gap-1">
-            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-red-500" style="width:${scoreWidth(o.pricing_pain_score)}"></div></div>
-            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-blue-500" style="width:${scoreWidth(o.feature_bloat_score)}"></div></div>
-            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-green-500" style="width:${scoreWidth(o.smb_overkill_score)}"></div></div>
-            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-orange-500" style="width:${scoreWidth(o.ai_compression_score)}"></div></div>
-            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-yellow-500" style="width:${scoreWidth(o.replacement_feasibility_score)}"></div></div>
-          </div>
-        </article>`;
+          ` : ''}
+        </div>`;
     }
 
-    // ── Load Feed ──
-    async function loadFeed() {
-      const min = document.getElementById('filterScore').value;
-      const software = document.getElementById('filterSoftware').value;
-      const category = document.getElementById('filterCategory').value;
-      let url = `/api/opportunities?min_score=${min}`;
-      if (software) url += `&software=${encodeURIComponent(software)}`;
-      if (category) url += `&category=${encodeURIComponent(category)}`;
+    // ─── Render: Raw Signals ────────────────────────────────────────────────────
+    function renderRawSignal(item) {
+      return `
+        <div class="bg-white border border-slate-200 rounded-xl p-3 flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 flex-shrink-0 mt-0.5">
+            ${(item.platform || 'rss').split(':')[1] || 'rss'.slice(0, 2).toUpperCase()}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-slate-700 leading-relaxed">${item.content ? item.content.slice(0, 120) : '(no content)'}</div>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-[10px] text-slate-400">${item.platform || ''}</span>
+              <span class="text-[10px] text-slate-300">·</span>
+              <span class="text-[10px] text-slate-400">${timeAgo(item.created_at)}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ─── Load Funnel Data ────────────────────────────────────────────────────────
+    async function loadFunnel() {
       try {
-        const data = await api(url);
-        const feed = document.getElementById('feed');
-        document.getElementById('feedCount').textContent = data.length;
-        if (!data.length) {
-          feed.innerHTML = `<div class="text-center py-12 text-zinc-500"><div class="text-4xl mb-3 opacity-30">📭</div><h3 class="text-sm font-medium text-zinc-300 mb-2">No opportunities found</h3><p class="text-xs text-zinc-600 mb-4">Import some data or load seed data to get started.</p><button class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors" onclick="seedData()">Load Seed Data</button></div>`;
+        const data = await api('/api/funnel/data');
+        funnelData = data;
+
+        // Stats
+        document.getElementById('statTotal').textContent = data.level1.length;
+        document.getElementById('statL1').textContent = data.level1.length;
+        document.getElementById('statL2').textContent = data.level2.length;
+        document.getElementById('l1Count').textContent = data.level1.length;
+        document.getElementById('l2Count').textContent = data.level2.length;
+        document.getElementById('l3Count').textContent = data.level3.length;
+
+        // Level 3
+        const l3El = document.getElementById('level3List');
+        const l3Empty = document.getElementById('l3Empty');
+        if (data.level3 && data.level3.length) {
+          l3Empty && l3Empty.remove();
+          l3El.innerHTML = data.level3.map(renderLevel3).join('');
         } else {
-          feed.innerHTML = data.map(renderOpp).join('');
+          if (!l3Empty) {
+            l3El.innerHTML = `<div class="card p-8 text-center col-span-full"><div class="text-4xl mb-3">🔍</div><h3 class="text-sm font-medium text-slate-700 mb-1">No affiliate opportunities yet</h3><p class="text-xs text-slate-400 mb-4">Click "📡 Fetch RSS" to start analyzing SaaS complaints</p><button onclick="fetchAllRss()" class="px-5 py-2.5 text-xs font-semibold rounded-xl text-white btn-green">📡 Fetch &amp; Analyze Now</button></div>`;
+          }
         }
-      } catch (e) { showToast('Failed to load feed', 'error'); }
-    }
 
-    function resetFilters() {
-      document.getElementById('filterScore').value = '0';
-      document.getElementById('filterSoftware').value = '';
-      document.getElementById('filterCategory').value = '';
-      loadFeed();
-    }
-
-    // ── Import Text ──
-    async function importText() {
-      const content = document.getElementById('importContent').value.trim();
-      if (!content) { showToast('Please enter content', 'error'); return; }
-      const platform = document.getElementById('importPlatform').value || 'manual';
-      const source_url = document.getElementById('importUrl').value || '';
-      const author = '';
-      try {
-        await api('/api/ingest/text', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, platform, source_url, author })
-        });
-        document.getElementById('importContent').value = '';
-        showToast('Opportunity generated!', 'success');
-        await loadStats();
-        await loadFeed();
-      } catch (e) { showToast('Error: ' + e.message, 'error'); }
-    }
-
-    // ── Import CSV ──
-    async function importCSV() {
-      const file = document.getElementById('csvFile').files[0];
-      if (!file) { showToast('Please select a CSV file', 'error'); return; }
-      const formData = new FormData();
-      formData.append('file', file);
-      try {
-        const res = await fetch('/api/ingest/csv', { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Import failed');
-        const result = await res.json();
-        showToast(`Imported ${result.created} records`, 'success');
-        await loadStats();
-        await loadFeed();
-      } catch (e) { showToast('Import failed: ' + e.message, 'error'); }
-    }
-
-    // ── Seed Data ──
-    async function seedData() {
-      try {
-        const result = await api('/api/seed', { method: 'POST' });
-        showToast(`Loaded ${result.created} seed samples`, 'success');
-        await loadStats();
-        await loadFeed();
-      } catch (e) { showToast('Error: ' + e.message, 'error'); }
-    }
-
-    // ── Clear All ──
-    async function clearAll() {
-      if (!confirm('Clear all data? This cannot be undone.')) return;
-      showToast('Note: Clear API not yet implemented', 'info');
-    }
-
-    // ── Data Sources ──
-    const DS_ICONS = { reddit:'📦', g2:'⭐', capterra:'📋', hackernews:'△', twitter:'𝕏', youtube:'▶', rss:'📡', ai_filter:'🎯', manual:'🤖', csv:'📄' };
-    const DS_NAMES = { reddit:'Reddit', g2:'G2 Reviews', capterra:'Capterra', hackernews:'Hacker News', twitter:'Twitter/X', youtube:'YouTube', rss:'RSS Feeds', ai_filter:'AI Filter', manual:'Manual Input', csv:'CSV Import' };
-
-    async function loadDataSources() {
-      try {
-        const sources = await api('/api/datasources');
-        const list = document.getElementById('dsList');
-        list.innerHTML = sources.map(ds => `
-          <div class="flex items-center gap-3 p-3 bg-zinc-900/80 border border-zinc-800/80 rounded-lg transition-colors ${ds.enabled ? 'border-green-500/20' : ''}">
-            <div class="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center text-base">${DS_ICONS[ds.source] || '📦'}</div>
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-zinc-200">${DS_NAMES[ds.source] || ds.source}</div>
-              <div class="text-[11px] text-zinc-500">${ds.total_collected || 0} collected · ${ds.success_count || 0} success · ${ds.error_count || 0} errors</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="collectDs('${ds.source}')" class="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors" title="Collect">▶</button>
-              <div class="toggle ${ds.enabled ? 'active' : ''}" onclick="toggleDs('${ds.source}', ${!ds.enabled})"></div>
-            </div>
-          </div>
-        `).join('');
-        const activeCount = sources.filter(s => s.enabled).length;
-        document.getElementById('dsActiveCount').textContent = `${activeCount} active`;
-      } catch (e) { console.error(e); }
-    }
-
-    async function toggleDs(source, enabled) {
-      try {
-        await api(`/api/datasources/${source}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled, config: '{}' })
-        });
-        await loadDataSources();
-        await loadStats();
-      } catch (e) { showToast('Failed to update source', 'error'); }
-    }
-
-    async function collectDs(source) {
-      try {
-        showToast(`Starting ${source} collection...`, 'info');
-        const result = await api(`/api/datasources/${source}/collect`, { method: 'POST' });
-        showToast(`Task started: ${result.task_id}`, 'success');
-        setTimeout(loadTasks, 2000);
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    }
-
-    // ── RSS Feeds ──
-    async function loadRssFeeds() {
-      try {
-        const result = await api('/api/rss/feeds');
-        const list = document.getElementById('rssFeedList');
-        if (!result.feeds || !result.feeds.length) {
-          list.innerHTML = '<div class="text-xs text-zinc-600 py-2">No feeds configured. Add one below.</div>';
+        // Level 1
+        const l1El = document.getElementById('level1List');
+        const l1Empty = document.getElementById('l1Empty');
+        if (data.level1 && data.level1.length) {
+          l1Empty && l1Empty.remove();
+          l1El.innerHTML = data.level1.map(o => renderOppCard(o, false)).join('');
         } else {
-          list.innerHTML = result.feeds.map(f => `
-            <div class="flex items-center gap-2 p-2 bg-zinc-800/80 border border-zinc-700/50 rounded-lg">
-              <span class="text-sm">📡</span>
-              <span class="flex-1 font-mono text-[11px] text-zinc-400 truncate" title="${f.url}">${f.name || f.url}</span>
-              <span class="text-[10px] text-zinc-600">${f.max_age_days || 30}d</span>
-              <button onclick="deleteRssFeed('${f.url}')" class="text-zinc-600 hover:text-red-400 text-sm transition-colors">✕</button>
-            </div>
-          `).join('');
+          if (!l1Empty) l1El.innerHTML = `<div class="card p-6 text-center"><div class="text-3xl mb-2">📭</div><p class="text-xs text-slate-400">No opportunities yet</p></div>`;
         }
-      } catch (e) { console.error(e); }
-    }
 
-    async function addRssFeed() {
-      const url = document.getElementById('rssFeedUrl').value.trim();
-      const name = document.getElementById('rssFeedName').value.trim();
-      if (!url) { showToast('Please enter a feed URL', 'error'); return; }
-      try {
-        await api('/api/rss/feeds', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ feed_url: url, feed_name: name, max_age_days: 30 })
-        });
-        document.getElementById('rssFeedUrl').value = '';
-        document.getElementById('rssFeedName').value = '';
-        showToast('Feed added', 'success');
-        await loadRssFeeds();
-      } catch (e) { showToast('Failed to add feed: ' + e.message, 'error'); }
-    }
-
-    async function deleteRssFeed(url) {
-      try {
-        await api(`/api/rss/feeds/${encodeURIComponent(url)}`, { method: 'DELETE' });
-        showToast('Feed removed', 'success');
-        await loadRssFeeds();
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    }
-
-    async function collectRss() {
-      try {
-        const result = await api('/api/rss/collect', { method: 'POST' });
-        showToast(`RSS collection started: ${result.task_id}`, 'info');
-        setTimeout(loadTasks, 2000);
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    }
-
-    // ── Notification Channels ──
-    async function loadNotificationChannels() {
-      try {
-        const result = await api('/api/notifications/channels');
-        const grid = document.getElementById('channelGrid');
-        grid.innerHTML = result.channels.map(ch => `
-          <div onclick="selectChannel('${ch.id}')" data-channel="${ch.id}" class="p-2.5 bg-zinc-800/80 border border-zinc-700/50 rounded-lg text-xs flex items-center gap-2 cursor-pointer hover:border-zinc-600 transition-colors">
-            <span>${getChannelIcon(ch.id)}</span>
-            <span>${ch.name}</span>
-          </div>
-        `).join('');
-      } catch (e) { console.error(e); }
-    }
-
-    function getChannelIcon(id) {
-      const icons = { telegram:'✈️', email:'📧', dingtalk:'🔔', feishu:'📱', wecom:'💬', ntfy:'📳', bark:'🍎', webhook:'🔗' };
-      return icons[id] || '📢';
-    }
-
-    function selectChannel(channelId) {
-      document.querySelectorAll('.channel-item').forEach(el => el.style.borderColor = '');
-      const el = document.querySelector(`[data-channel="${channelId}"]`);
-      if (el) el.style.borderColor = '#f97316';
-      document.getElementById('notificationConfig').classList.remove('hidden');
-      document.getElementById('notifContent').value = `Test notification from Too Expensive Radar at ${new Date().toLocaleTimeString()}`;
-    }
-
-    async function sendNotification() {
-      const configJson = document.getElementById('notifConfigJson').value.trim();
-      const content = document.getElementById('notifContent').value.trim();
-      const selected = document.querySelector('[data-channel]');
-      if (!selected) { showToast('Please select a channel first', 'error'); return; }
-      const channel = selected.dataset.channel;
-      try {
-        const result = await api('/api/notifications/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ channel, content, config: configJson })
-        });
-        if (result.success) showToast(`${channel} notification sent!`, 'success');
-        else showToast(`${channel} failed: ${result.message}`, 'error');
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    }
-
-    // ── Scheduler ──
-    async function loadScheduler() {
-      try {
-        const status = await api('/api/scheduler/status');
-        document.getElementById('schedulerStatus').innerHTML = `
-          <span class="${status.active ? 'text-green-400' : 'text-zinc-500'}">● ${status.active ? status.period : 'inactive'}</span> ·
-          Crawl: ${status.should_crawl ? '✅' : '❌'} ·
-          Analyze: ${status.should_analyze ? '✅' : '❌'} ·
-          Push: ${status.should_push ? '✅' : '❌'}
-        `;
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.preset === 'always_on');
-        });
-      } catch (e) { console.error(e); }
-    }
-
-    async function configureScheduler(preset) {
-      try {
-        await api('/api/scheduler/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ preset })
-        });
-        document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.preset === preset));
-        await loadScheduler();
-        showToast(`Scheduler set to ${preset}`, 'success');
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    }
-
-    // ── LLM Config ──
-    async function saveLlMConfig(provider) {
-      const isClaude = provider === 'claude';
-      const key = isClaude ? document.getElementById('claudeKey').value : document.getElementById('openaiKey').value;
-      const model = isClaude ? document.getElementById('claudeModel').value : document.getElementById('openaiModel').value;
-      const baseUrl = isClaude ? '' : document.getElementById('openaiBaseUrl').value;
-      const enabled = !!key;
-      try {
-        await api(`/api/llm/configs/${provider}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ api_key: key, model, base_url: baseUrl, enabled })
-        });
-        showToast(`${provider} saved${enabled ? ' (enabled)' : ''}`, 'success');
-        await loadLlMConfigs();
-        await loadStats();
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    }
-
-    async function loadLlMConfigs() {
-      try {
-        const configs = await api('/api/llm/configs');
-        const list = document.getElementById('llmStatusList');
-        const enabledConfig = configs.find(c => c.enabled);
-        const activeText = enabledConfig
-          ? `● ${enabledConfig.provider === 'claude' ? '🦀' : '🤖'} ${enabledConfig.model} active`
-          : 'Rule-based mode (no API key)';
-        document.getElementById('llmActiveRow').innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${enabledConfig ? 'bg-green-500' : 'bg-zinc-500'}"></span><span>${activeText}</span>`;
-        document.getElementById('llmActiveText').textContent = activeText;
-        list.innerHTML = configs.map(c => `
-          <div class="flex justify-between py-2 ${configs.indexOf(c) < configs.length - 1 ? 'border-b border-zinc-800/50' : ''}">
-            <span class="text-xs ${c.provider === 'claude' ? 'text-zinc-300' : 'text-zinc-300'}">${c.provider === 'claude' ? '🦀' : '🤖'} ${c.provider}</span>
-            <span class="text-xs ${c.enabled ? 'text-green-400' : 'text-zinc-600'}">${c.enabled ? '● ' + c.model : 'disabled'}</span>
-          </div>
-        `).join('');
-      } catch (e) { console.error(e); }
-    }
-
-    // ── AI Filter ──
-    async function loadAiFilterInterests() {
-      try {
-        const result = await api('/api/ai/filter/interests');
-        if (result.interests) document.getElementById('aiFilterInterests').value = result.interests;
-      } catch (e) { console.error(e); }
-    }
-
-    async function saveAiFilterInterests() {
-      const interests = document.getElementById('aiFilterInterests').value.trim();
-      try {
-        const result = await api('/api/ai/filter/interests', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ interests })
-        });
-        showToast(`AI filter updated (${result.tags_count} tags)`, 'success');
-      } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-    }
-
-    // ── Tasks ──
-    async function loadTasks() {
-      try {
-        const tasks = await api('/api/tasks?limit=20');
-        const list = document.getElementById('taskList');
-        if (!tasks.length) {
-          list.innerHTML = '<div class="text-center py-12 text-zinc-500"><div class="text-4xl mb-3 opacity-30">📭</div><h3 class="text-sm font-medium text-zinc-300 mb-2">No tasks</h3><p class="text-xs text-zinc-600">Background tasks appear here when data collection runs.</p></div>';
-          return;
+        // Level 2
+        const l2El = document.getElementById('level2List');
+        const l2Empty = document.getElementById('l2Empty');
+        if (data.level2 && data.level2.length) {
+          l2Empty && l2Empty.remove();
+          l2El.innerHTML = data.level2.map(o => renderOppCard(o, true)).join('');
+        } else {
+          if (!l2Empty) l2El.innerHTML = `<div class="card p-6 text-center"><div class="text-3xl mb-2">📭</div><p class="text-xs text-slate-400">No opportunities yet</p></div>`;
         }
-        list.innerHTML = tasks.map(t => `
-          <div class="flex items-start gap-3 p-3 bg-zinc-900/80 border border-zinc-800/80 rounded-lg ${t.status === 'pending' ? 'border-l-2 border-l-zinc-500' : t.status === 'running' ? 'border-l-2 border-l-blue-500' : t.status === 'completed' ? 'border-l-2 border-l-green-500' : 'border-l-2 border-l-red-500'}">
-            <div class="text-base">${t.status === 'completed' ? '✅' : t.status === 'running' ? '🔄' : t.status === 'failed' ? '❌' : '⏳'}</div>
-            <div class="flex-1 min-w-0">
-              <div class="font-mono text-xs font-medium text-zinc-200">${t.task_type}</div>
-              <div class="text-[11px] text-zinc-500">${t.status} · ${timeAgo(t.created_at)}</div>
-              ${t.status === 'running' ? `<div class="h-1 bg-zinc-800 rounded mt-2 overflow-hidden"><div class="h-full bg-orange-500 transition-all" style="width:${t.progress}%"></div></div>` : ''}
-              ${t.error_message ? `<div class="text-[11px] text-red-400 mt-1">Error: ${t.error_message}</div>` : ''}
-            </div>
-          </div>
-        `).join('');
-      } catch (e) { console.error(e); }
+
+      } catch (e) { console.error('loadFunnel error', e); }
     }
 
-    // ── Tab Navigation ──
-    document.querySelectorAll('[data-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        const tab = btn.dataset.tab;
-        document.getElementById(`tab-${tab}`).classList.add('active');
-        if (tab === 'sources') { loadDataSources(); loadRssFeeds(); loadNotificationChannels(); loadScheduler(); }
-        if (tab === 'llm') { loadLlMConfigs(); loadAiFilterInterests(); }
-        if (tab === 'tasks') loadTasks();
-      });
-    });
+    // ─── Load Raw Signals ────────────────────────────────────────────────────────
+    async function loadRawSignals() {
+      try {
+        const data = await api('/api/raw-signals?limit=50');
+        const rawEl = document.getElementById('rawList');
+        const rawEmpty = document.getElementById('rawEmpty');
+        document.getElementById('rawCount').textContent = data.length || 0;
+        if (data && data.length) {
+          rawEmpty && rawEmpty.remove();
+          rawEl.innerHTML = data.map(renderRawSignal).join('');
+        }
+      } catch (e) { console.error('loadRawSignals error', e); }
+    }
 
-    // ── Scheduler Preset Buttons ──
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => configureScheduler(btn.dataset.preset));
-    });
+    // ─── Poll Task Status ───────────────────────────────────────────────────────
+    async function pollTask(taskId) {
+      if (!taskId) return;
+      try {
+        const tasks = await api('/api/tasks?limit=5');
+        const task = tasks.find(t => t.task_id === taskId);
+        if (!task) return;
 
-    // ── Keyboard Shortcuts ──
-    document.addEventListener('keydown', e => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      const map = { f: 'feed', i: 'import', s: 'sources', l: 'llm', t: 'tasks' };
-      const tab = map[e.key.toLowerCase()];
-      if (tab) {
-        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        const btn = document.querySelector(`[data-tab="${tab}"]`);
-        if (btn) { btn.classList.add('active'); document.getElementById(`tab-${tab}`).classList.add('active'); }
+        const statusEl = document.getElementById('taskStatus');
+        const textEl = document.getElementById('taskStatusText');
+        const progressEl = document.getElementById('taskProgress');
+
+        if (task.status === 'running' || task.status === 'pending') {
+          statusEl.classList.remove('hidden');
+          statusEl.classList.add('flex');
+          textEl.textContent = `Processing... ${task.progress || 0}%`;
+          progressEl.style.width = (task.progress || 0) + '%';
+        } else if (task.status === 'completed') {
+          statusEl.classList.add('hidden');
+          statusEl.classList.remove('flex');
+          clearInterval(pollTimer);
+          showToast('RSS fetch & analysis complete!', 'success');
+          await loadFunnel();
+          await loadRawSignals();
+          pollTimer = null;
+        } else if (task.status === 'failed') {
+          statusEl.classList.add('hidden');
+          statusEl.classList.remove('flex');
+          clearInterval(pollTimer);
+          showToast('Task failed: ' + (task.error_message || 'unknown error'), 'error');
+          pollTimer = null;
+        }
+      } catch (e) { console.error('pollTask error', e); }
+    }
+
+    // ─── Fetch All RSS ──────────────────────────────────────────────────────────
+    async function fetchAllRss() {
+      const btn = document.getElementById('fetchBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin inline-block">↻</span> Fetching...';
+      try {
+        const result = await api('/api/rss/fetch-all', { method: 'POST' });
+        currentTaskId = result.task_id;
+        showToast(`Fetching ${result.feeds_count} RSS feeds... (${result.task_id.slice(0,8)})`, 'info');
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(() => pollTask(currentTaskId), 2000);
+        setTimeout(() => { btn.disabled = false; btn.innerHTML = '📡 Fetch RSS'; }, 30000);
+      } catch (e) {
+        showToast('Failed to start: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '📡 Fetch RSS';
       }
-    });
-
-    // ── Init ──
-    async function refresh() {
-      await loadStats();
-      await loadFeed();
     }
-    refresh();
+
+    // ─── Init ───────────────────────────────────────────────────────────────────
+    async function init() {
+      await loadFunnel();
+      await loadRawSignals();
+    }
+    init();
   </script>
 </body>
 </html>

@@ -503,6 +503,22 @@ async def collect_rss(background_tasks: BackgroundTasks, session: Session = Depe
     return {"task_id": task.task_id, "status": task.status}
 
 
+@app.post("/api/rss/fetch-all")
+async def fetch_all_rss(background_tasks: BackgroundTasks, session: Session = Depends(get_session)) -> dict:
+    from app.models import AsyncTask, TaskStatus
+    import uuid
+
+    task_id = str(uuid.uuid4())
+    task = AsyncTask(task_id=task_id, task_type="rss_fetch_all", status=TaskStatus.PENDING)
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+
+    background_tasks.add_task(_run_rss_collect_async, task.task_id, DEFAULT_RSS_FEEDS)
+
+    return {"task_id": task.task_id, "status": task.status, "feeds_count": len(DEFAULT_RSS_FEEDS)}
+
+
 async def _run_rss_collect_async(task_id: str, feeds: list):
     import asyncio
     import logging
@@ -615,6 +631,9 @@ async def _run_rss_collect_async(task_id: str, feeds: list):
                     )
                     session.add(opp)
                     session.commit()
+                    session.refresh(opp)
+
+                    await _discover_alternatives_for_opportunity(session, opp, content)
                     opp_count += 1
 
                     if (i + 1) % 20 == 0:
@@ -649,6 +668,150 @@ async def _run_rss_collect_async(task_id: str, feeds: list):
                 task.error_message = str(e)[:500]
                 session.add(task)
             session.commit()
+
+
+@app.get("/api/funnel/status")
+def funnel_status(session: Session = Depends(get_session)) -> dict:
+    from app.models import Opportunity, AlternativeCandidate, RawSignal, Complaint
+
+    total_opps = session.exec(
+        select(Opportunity).where(Opportunity.disruption_score > 0)
+    ).all()
+
+    opp_ids_level1 = [o.id for o in total_opps]
+    level1_count = len(opp_ids_level1)
+
+    if opp_ids_level1:
+        complaint_ids = [o.complaint_id for o in total_opps if o.complaint_id]
+        complaint_to_opp = {o.complaint_id: o.id for o in total_opps if o.complaint_id}
+        if complaint_ids:
+            alts_with_boost = session.exec(
+                select(AlternativeCandidate)
+                .where(AlternativeCandidate.complaint_id.in_(complaint_ids))
+                .where(AlternativeCandidate.disruption_score_boost > 0)
+            ).all()
+            opp_ids_level2 = set(complaint_to_opp.get(a.complaint_id) for a in alts_with_boost if a.complaint_id in complaint_to_opp)
+            level2_count = len(opp_ids_level2)
+
+            alts_confirmed = [a for a in alts_with_boost if a.affiliate_support == "confirmed"]
+            opp_ids_level3 = set(complaint_to_opp.get(a.complaint_id) for a in alts_confirmed if a.complaint_id in complaint_to_opp)
+            level3_count = len(opp_ids_level3)
+        else:
+            level2_count = 0
+            level3_count = 0
+    else:
+        level2_count = 0
+        level3_count = 0
+
+    return {
+        "level1_count": level1_count,
+        "level2_count": level2_count,
+        "level3_count": level3_count,
+        "total_opportunities": level1_count,
+    }
+
+
+@app.get("/api/funnel/data")
+def funnel_data(session: Session = Depends(get_session)) -> dict:
+    from app.models import Opportunity, AlternativeCandidate, RawSignal, Complaint
+
+    all_opps = session.exec(
+        select(Opportunity).where(Opportunity.disruption_score > 0)
+    ).all()
+
+    raw_map = {}
+    for opp in all_opps:
+        complaint = session.exec(select(Complaint).where(Complaint.id == opp.complaint_id)).first()
+        if complaint:
+            raw = session.exec(select(RawSignal).where(RawSignal.id == complaint.raw_signal_id)).first()
+            if raw:
+                raw_map[opp.id] = raw
+
+    opp_ids_all = [o.id for o in all_opps]
+    complaint_ids = [o.complaint_id for o in all_opps if o.complaint_id]
+    alts_map: dict[int, list] = {}
+    if complaint_ids:
+        complaint_to_opp = {o.complaint_id: o.id for o in all_opps if o.complaint_id}
+        alts = session.exec(
+            select(AlternativeCandidate)
+            .where(AlternativeCandidate.complaint_id.in_(complaint_ids))
+        ).all()
+        for alt in alts:
+            opp_id = complaint_to_opp.get(alt.complaint_id)
+            if opp_id:
+                if opp_id not in alts_map:
+                    alts_map[opp_id] = []
+                alts_map[opp_id].append({
+                    "alternative_name": alt.alternative_name,
+                    "pricing_tier": alt.pricing_tier,
+                    "affiliate_support": alt.affiliate_support,
+                    "affiliate_url": alt.affiliate_url,
+                    "price_advantage": alt.price_advantage,
+                    "disruption_score_boost": alt.disruption_score_boost,
+                })
+
+    def build_opp(o):
+        raw = raw_map.get(o.id)
+        alts = alts_map.get(o.id, [])
+        return {
+            "id": o.id,
+            "software": o.software,
+            "category": o.category,
+            "complaint_summary": o.complaint_summary,
+            "disruption_score": o.disruption_score,
+            "evidence": o.evidence,
+            "created_at": o.created_at.isoformat() if o.created_at else "",
+            "platform": raw.platform if raw else "",
+            "content": raw.content if raw else "",
+            "source_url": raw.source_url if raw else "",
+            "alternatives": alts,
+        }
+
+    all_opps_data = [build_opp(o) for o in all_opps]
+
+    level1 = all_opps_data
+
+    level2 = [o for o in all_opps_data if any(a["disruption_score_boost"] > 0 for a in o["alternatives"])]
+
+    level3 = [o for o in all_opps_data if any(a["affiliate_support"] == "confirmed" for a in o["alternatives"])]
+
+    return {
+        "level1": level1,
+        "level2": level2,
+        "level3": level3,
+    }
+
+
+@app.get("/api/raw-signals")
+def list_raw_signals(limit: int = 50, session: Session = Depends(get_session)) -> list:
+    from app.models import RawSignal
+    opps = session.exec(
+        select(Opportunity).where(Opportunity.disruption_score > 0)
+    ).all()
+    opp_ids = [o.id for o in opps]
+    complaint_map = {}
+    if opp_ids:
+        complaints = session.exec(
+            select(Complaint).where(Complaint.id.in_([o.complaint_id for o in opps if o.complaint_id]))
+        ).all()
+        complaint_map = {c.id: c for c in complaints}
+
+    signals = []
+    for opp in opps:
+        cid = opp.complaint_id
+        if cid in complaint_map:
+            comp = complaint_map[cid]
+            raw = session.exec(select(RawSignal).where(RawSignal.id == comp.raw_signal_id)).first()
+            if raw:
+                signals.append({
+                    "id": raw.id,
+                    "content": raw.content,
+                    "platform": raw.platform,
+                    "source_url": raw.source_url,
+                    "author": raw.author,
+                    "created_at": raw.created_at.isoformat() if raw.created_at else "",
+                })
+    return signals[:limit]
 
 
 @app.get("/api/notifications/channels")
@@ -941,7 +1104,10 @@ async def _discover_alternatives_for_opportunity(
     candidates = await engine.discover(content, opp.software, force_search=False)
 
     stored = []
+    best_boost = 0.0
     for c in candidates:
+        if c.disruption_score_boost > best_boost:
+            best_boost = c.disruption_score_boost
         alt = AlternativeCandidate(
             complaint_id=opp.complaint_id,
             original_software=c.original_software,
@@ -956,6 +1122,10 @@ async def _discover_alternatives_for_opportunity(
         )
         session.add(alt)
         stored.append(alt)
+
+    if best_boost > 0:
+        opp.disruption_score += best_boost
+        session.add(opp)
 
     session.commit()
     return stored
