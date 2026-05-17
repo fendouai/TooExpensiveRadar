@@ -1,296 +1,303 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Too Expensive Radar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #09090b;
-      --surface: #18181b;
-      --surface-2: #27272a;
-      --surface-3: #3f3f46;
-      --border: #3f3f46;
-      --border-light: #52525b;
-      --text: #fafafa;
-      --text-secondary: #a1a1aa;
-      --muted: #71717a;
-      --accent: #f97316;
-      --accent-hover: #fb923c;
-      --accent-dim: rgba(249, 115, 22, 0.15);
-      --accent-2: #eab308;
-      --danger: #ef4444;
-      --success: #22c55e;
-      --blue: #3b82f6;
-      --font-mono: 'JetBrains Mono', monospace;
-      --font-body: 'Inter', -apple-system, sans-serif;
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            surface: {
+              DEFAULT: '#18181b',
+              2: '#27272a',
+              3: '#3f3f46',
+            },
+            accent: {
+              DEFAULT: '#f97316',
+              hover: '#fb923c',
+              dim: 'rgba(249, 115, 22, 0.15)',
+            },
+          },
+        },
+      },
     }
-
+  </script>
+  <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 14px; }
-    body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #09090b; color: #fafafa; min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(249, 115, 22, 0.08), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-    /* ── Header ── */
-    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 60px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
-    .logo { display: flex; align-items: center; gap: 12px; }
-    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), #ea580c); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: white; letter-spacing: -0.5px; flex-shrink: 0; }
-    .logo-text h1 { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
-    .logo-text span { font-size: 11px; color: var(--muted); font-weight: 400; display: block; margin-top: 1px; letter-spacing: 0.02em; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-    nav { display: flex; gap: 2px; }
-    nav button { background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-body); font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
-    nav button:hover { color: var(--text); background: var(--surface-2); }
-    nav button.active { color: var(--accent); background: var(--accent-dim); }
-    nav button .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
-    nav button.active .nav-dot { background: var(--accent); }
+    /* Glass effect */
+    .glass {
+      background: rgba(24, 24, 27, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(63, 63, 70, 0.5);
+    }
 
-    .header-actions { display: flex; gap: 12px; align-items: center; }
-    .api-status { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); font-size: 12px; color: var(--text-secondary); }
-    .api-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-    .api-status.active .dot { background: var(--success); box-shadow: 0 0 6px var(--success); }
-    .api-status .key-name { font-family: var(--font-mono); font-size: 11px; }
+    /* Glow effect */
+    .glow-accent { box-shadow: 0 0 20px rgba(249, 115, 22, 0.15); }
+    .glow-sm { box-shadow: 0 0 10px rgba(249, 115, 22, 0.1); }
 
-    /* ── Layout ── */
-    main { display: grid; grid-template-columns: 1fr 300px; gap: 0; min-height: calc(100vh - 60px); }
-    .content { padding: 24px 28px; overflow-y: auto; max-height: calc(100vh - 60px); }
-    .sidebar { background: var(--surface); border-left: 1px solid var(--border); padding: 20px; overflow-y: auto; max-height: calc(100vh - 60px); }
+    /* Card hover */
+    .card-hover {
+      transition: all 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      border-color: rgba(82, 82, 91, 0.8);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
 
-    /* ── Stat Cards ── */
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; transition: all 0.2s; cursor: default; }
-    .stat-card:hover { border-color: var(--border-light); transform: translateY(-1px); }
-    .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .stat-card .value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--text); margin-top: 6px; line-height: 1.1; }
-    .stat-card .value.accent { color: var(--accent); }
-    .stat-card .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-    .stat-card .delta { font-size: 11px; margin-left: 6px; color: var(--success); }
+    /* Score bar animation */
+    .score-bar-fill {
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-    /* ── Section Headers ── */
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .section-header h2 { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
-    .section-header h2 .icon { font-size: 16px; }
-    .section-header .badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--accent-dim); color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+    /* Gradient border */
+    .gradient-border {
+      position: relative;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), transparent 50%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
 
-    /* ── Filters Bar ── */
-    .filters { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-    .filters select, .filters input { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--font-body); font-size: 12px; padding: 8px 12px; border-radius: 8px; outline: none; transition: border-color 0.15s; }
-    .filters select:focus, .filters input:focus { border-color: var(--accent); }
-    .filters select { min-width: 130px; cursor: pointer; }
-    .filters input { min-width: 160px; }
-    .filters input::placeholder { color: var(--muted); }
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(24, 24, 27, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(63, 63, 70, 0.5);
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 12px;
+      z-index: 300;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-left: 3px solid #22c55e; }
+    .toast.error { border-left: 3px solid #ef4444; }
+    .toast.info { border-left: 3px solid #3b82f6; }
 
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-family: var(--font-body); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; }
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-secondary { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
-    .btn-secondary:hover { border-color: var(--border-light); color: var(--text); }
-    .btn-ghost { background: transparent; color: var(--text-secondary); }
-    .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
-    .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
-    .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
-    .btn-sm { padding: 5px 10px; font-size: 11px; }
-
-    /* ── Opportunity Cards ── */
-    .feed { display: flex; flex-direction: column; gap: 12px; }
-    .opp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; transition: all 0.2s; }
-    .opp-card:hover { border-color: var(--border-light); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
-    .opp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 12px; }
-    .opp-software { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
-    .opp-software h3 { font-size: 15px; font-weight: 700; color: var(--text); }
-    .opp-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.12); color: #93c5fd; letter-spacing: 0.03em; }
-    .opp-score { display: flex; flex-direction: column; align-items: center; min-width: 52px; flex-shrink: 0; }
-    .opp-score strong { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
-    .opp-score span { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
-
-    .opp-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .opp-meta .time { font-family: var(--font-mono); }
-
-    .opp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .opp-box { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: 12px; }
-    .opp-box b { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; font-weight: 600; }
-    .opp-box.full { grid-column: 1 / -1; }
-    .opp-box .value { color: var(--text); line-height: 1.4; }
-    .opp-evidence { color: var(--muted); font-size: 11px; border-left: 2px solid var(--border); padding-left: 10px; font-style: italic; line-height: 1.5; }
-
-    .score-breakdown { display: flex; gap: 4px; margin-top: 10px; }
-    .score-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
-    .score-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
-    .score-bar-fill.pricing { background: var(--danger); }
-    .score-bar-fill.bloat { background: var(--blue); }
-    .score-bar-fill.smb { background: var(--success); }
-    .score-bar-fill.ai { background: var(--accent); }
-    .score-bar-fill.feas { background: var(--accent-2); }
-
-    /* ── Empty State ── */
-    .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
-    .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
-    .empty h3 { font-size: 14px; color: var(--text); margin-bottom: 6px; }
-    .empty p { font-size: 13px; }
-    .empty .btn { margin-top: 12px; }
-
-    /* ── Tab Content ── */
+    /* Tab content */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* ── Form Groups ── */
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-family: var(--font-body); font-size: 12px; padding: 9px 12px; border-radius: 8px; outline: none; transition: border-color 0.15s; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
-    .form-group textarea { resize: vertical; min-height: 90px; }
-    .form-group input::placeholder { color: var(--muted); }
-    .form-group .hint { font-size: 10px; color: var(--muted); margin-top: 3px; }
-
-    /* ── Toggle ── */
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .toggle-row:last-child { border-bottom: none; }
-    .toggle-row span { font-size: 13px; color: var(--text); }
-    .toggle { width: 40px; height: 22px; border-radius: 11px; background: var(--surface-3); cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
-    .toggle.active { background: var(--accent); }
-    .toggle::after { content: ''; width: 16px; height: 16px; border-radius: 50%; background: white; position: absolute; top: 3px; left: 3px; transition: left 0.2s; }
+    /* Toggle switch */
+    .toggle {
+      width: 40px;
+      height: 22px;
+      border-radius: 11px;
+      background: #3f3f46;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle.active { background: #f97316; }
+    .toggle::after {
+      content: '';
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: left 0.2s;
+    }
     .toggle.active::after { left: 19px; }
 
-    /* ── Data Source List ── */
-    .ds-list { display: flex; flex-direction: column; gap: 8px; }
-    .ds-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; border: 1px solid var(--border); transition: all 0.15s; }
-    .ds-item.active { border-color: rgba(34, 197, 94, 0.4); }
-    .ds-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-    .ds-info { flex: 1; min-width: 0; }
-    .ds-info strong { display: block; font-size: 13px; margin-bottom: 2px; }
-    .ds-info span { font-size: 11px; color: var(--muted); display: block; }
-    .ds-actions { display: flex; gap: 6px; align-items: center; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
-    /* ── LLM Config Cards ── */
-    .llm-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: var(--surface-2); }
-    .llm-card h5 { font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-    .llm-card h5 .tag { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--accent-dim); color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
-    .llm-active-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; margin-bottom: 12px; font-size: 12px; color: var(--success); }
-    .llm-active-row .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+    /* Keyboard shortcut kbd */
+    kbd {
+      background: #27272a;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
 
-    /* ── Task List ── */
-    .task-list { display: flex; flex-direction: column; gap: 8px; }
-    .task-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; border: 1px solid var(--border); }
-    .task-item.pending { border-left: 3px solid var(--muted); }
-    .task-item.running { border-left: 3px solid var(--blue); }
-    .task-item.completed { border-left: 3px solid var(--success); }
-    .task-item.failed { border-left: 3px solid var(--danger); }
-    .task-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-    .task-info { flex: 1; min-width: 0; }
-    .task-info strong { display: block; font-size: 12px; margin-bottom: 2px; font-family: var(--font-mono); }
-    .task-info span { font-size: 11px; color: var(--muted); }
-    .task-progress { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
-    .task-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+    /* Progress ring */
+    .progress-ring { transform: rotate(-90deg); }
+    .progress-ring-circle {
+      transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
 
-    /* ── Sidebar ── */
-    .sidebar-panel { margin-bottom: 24px; }
-    .sidebar-panel h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .sidebar-panel h4::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    /* Fade in animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .stagger-1 { animation-delay: 50ms; }
+    .stagger-2 { animation-delay: 100ms; }
+    .stagger-3 { animation-delay: 150ms; }
+    .stagger-4 { animation-delay: 200ms; }
 
-    /* ── Notification Channels ── */
-    .channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .channel-item { padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.15s; }
-    .channel-item:hover { border-color: var(--border-light); }
-    .channel-item .icon { font-size: 14px; }
+    /* Pulse glow */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 6px rgba(34, 197, 94, 0.3); }
+      50% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.5); }
+    }
+    .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
 
-    /* ── Toast ── */
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 12px; z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.25s; display: flex; align-items: center; gap: 10px; max-width: 320px; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { border-left: 3px solid var(--success); }
-    .toast.error { border-left: 3px solid var(--danger); }
-    .toast.info { border-left: 3px solid var(--blue); }
-
-    /* ── Score Color Legend ── */
-    .score-legend { display: flex; gap: 12px; flex-wrap: wrap; }
-    .score-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
-    .score-legend-item .bar { width: 16px; height: 4px; border-radius: 2px; }
-
-    /* ── Scheduler Panel ── */
-    .scheduler-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-    .preset-btn { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
-    .preset-btn:hover { border-color: var(--border-light); color: var(--text); }
-    .preset-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-
-    /* ── RSS Feed ── */
-    .rss-feed-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; }
-    .rss-feed-item .url { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .rss-feed-item .remove { color: var(--muted); cursor: pointer; font-size: 14px; }
-    .rss-feed-item .remove:hover { color: var(--danger); }
-
-    /* ── Responsive ── */
-    @media (max-width: 1100px) { main { grid-template-columns: 1fr; } .sidebar { display: none; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px) { body { padding: 0; } header { padding: 0 12px; } .content { padding: 16px; } .stats-row { grid-template-columns: 1fr 1fr; } nav { display: none; } }
+    /* Input focus ring */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    }
   </style>
 </head>
-<body>
-  <header>
-    <div class="logo">
-      <div class="logo-icon">TE</div>
-      <div class="logo-text">
-        <h1>Too Expensive Radar</h1>
-        <span>AI-native SaaS Replacement Intelligence</span>
+<body class="antialiased">
+  <!-- Header -->
+  <header class="glass sticky top-0 z-50 px-6 h-[60px] flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-orange-500/20">
+        TE
+      </div>
+      <div>
+        <h1 class="font-mono font-semibold text-sm text-zinc-100 tracking-tight">Too Expensive Radar</h1>
+        <p class="text-[11px] text-zinc-500 font-normal">AI-native SaaS Intelligence</p>
       </div>
     </div>
-    <nav>
-      <button class="active" data-tab="feed"><span class="nav-dot"></span>Feed</button>
-      <button data-tab="import"><span class="nav-dot"></span>Import</button>
-      <button data-tab="sources"><span class="nav-dot"></span>Sources</button>
-      <button data-tab="llm"><span class="nav-dot"></span>LLM</button>
-      <button data-tab="tasks"><span class="nav-dot"></span>Tasks</button>
+
+    <nav class="flex items-center gap-1">
+      <button data-tab="feed" class="nav-btn active">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+        <span>Feed</span>
+      </button>
+      <button data-tab="import" class="nav-btn">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+        <span>Import</span>
+      </button>
+      <button data-tab="sources" class="nav-btn">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+        <span>Sources</span>
+      </button>
+      <button data-tab="llm" class="nav-btn">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+        <span>LLM</span>
+      </button>
+      <button data-tab="tasks" class="nav-btn">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+        <span>Tasks</span>
+      </button>
     </nav>
-    <div class="header-actions">
-      <div class="api-status" id="apiStatus">
-        <span class="dot"></span>
-        <span class="key-name" id="apiKeyName">Rule mode</span>
+
+    <div class="flex items-center gap-3">
+      <div id="apiStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-xs">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500" id="apiDot"></span>
+        <span id="apiKeyName" class="font-mono text-zinc-400">Rule mode</span>
       </div>
     </div>
   </header>
 
-  <main>
-    <div class="content">
+  <div class="flex relative z-10">
+    <!-- Main Content -->
+    <main class="flex-1 p-6 overflow-y-auto max-h-[calc(100vh-60px)]">
       <!-- Stats Row -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="label">🔢 Total Signals</div>
-          <div class="value" id="statTotal">0</div>
-          <div class="sub" id="statComplaints">0 complaints</div>
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="stat-card animate-fade-in stagger-1">
+          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+            <span>📊</span> Total Signals
+          </div>
+          <div class="font-mono text-3xl font-bold text-zinc-100 mt-2" id="statTotal">0</div>
+          <div class="text-[11px] text-zinc-500 mt-1" id="statComplaints">0 complaints</div>
         </div>
-        <div class="stat-card">
-          <div class="label">📊 Avg Disruption</div>
-          <div class="value accent" id="statAvg">0</div>
-          <div class="sub">disruption score</div>
+        <div class="stat-card animate-fade-in stagger-2">
+          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+            <span>⚡</span> Avg Disruption
+          </div>
+          <div class="font-mono text-3xl font-bold text-orange-500 mt-2" id="statAvg">0</div>
+          <div class="text-[11px] text-zinc-500 mt-1">disruption score</div>
         </div>
-        <div class="stat-card">
-          <div class="label">🏆 Top Software</div>
-          <div class="value" id="statSoftware" style="font-size: 18px;">-</div>
-          <div class="sub" id="statSoftwareCount"></div>
+        <div class="stat-card animate-fade-in stagger-3">
+          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+            <span>🏆</span> Top Software
+          </div>
+          <div class="font-mono text-lg font-bold text-zinc-100 mt-2" id="statSoftware">-</div>
+          <div class="text-[11px] text-zinc-500 mt-1" id="statSoftwareCount"></div>
         </div>
-        <div class="stat-card">
-          <div class="label">🤖 Engine</div>
-          <div class="value" id="statLlm" style="font-size: 18px;">Rule</div>
-          <div class="sub" id="statLlmSub">no API key</div>
+        <div class="stat-card animate-fade-in stagger-4">
+          <div class="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+            <span>🤖</span> Engine
+          </div>
+          <div class="font-mono text-lg font-bold text-zinc-100 mt-2" id="statLlm">Rule</div>
+          <div class="text-[11px] text-zinc-500 mt-1" id="statLlmSub">no API key</div>
         </div>
       </div>
 
       <!-- Feed Tab -->
       <div class="tab-content active" id="tab-feed">
-        <div class="section-header">
-          <h2><span class="icon">📡</span> Replacement Opportunity Feed</h2>
-          <span class="badge" id="feedCount">0</span>
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-3">
+            <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+              <span class="text-base">📡</span> Opportunity Feed
+            </h2>
+            <span class="px-2 py-0.5 text-[10px] font-bold bg-orange-500/10 text-orange-500 rounded-md uppercase tracking-wider" id="feedCount">0</span>
+          </div>
         </div>
-        <div class="filters">
-          <select id="filterScore">
+
+        <!-- Filters -->
+        <div class="flex gap-2 mb-4 flex-wrap">
+          <select id="filterScore" class="bg-zinc-900 border border-zinc-700/50 text-zinc-300 text-xs px-3 py-2 rounded-lg min-w-[120px]">
             <option value="0">All Scores</option>
             <option value="6">Score ≥ 6</option>
             <option value="7">Score ≥ 7</option>
             <option value="8">Score ≥ 8</option>
             <option value="9">Score ≥ 9</option>
           </select>
-          <select id="filterCategory">
+          <select id="filterCategory" class="bg-zinc-900 border border-zinc-700/50 text-zinc-300 text-xs px-3 py-2 rounded-lg min-w-[140px]">
             <option value="">All Categories</option>
             <option value="CRM / Marketing Automation">CRM</option>
             <option value="Automation">Automation</option>
@@ -299,255 +306,350 @@
             <option value="Customer Support">Support</option>
             <option value="Internal Tools / Database">Internal Tools</option>
           </select>
-          <input type="text" id="filterSoftware" placeholder="Filter by software..." />
-          <button class="btn btn-secondary btn-sm" onclick="loadFeed()">Filter</button>
-          <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Reset</button>
+          <input type="text" id="filterSoftware" placeholder="Filter by software..." class="bg-zinc-900 border border-zinc-700/50 text-zinc-300 text-xs px-3 py-2 rounded-lg min-w-[160px] placeholder:text-zinc-600" />
+          <button onclick="loadFeed()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Filter</button>
+          <button onclick="resetFilters()" class="px-3 py-2 bg-transparent hover:bg-zinc-800 text-zinc-500 text-xs font-medium rounded-lg transition-colors">Reset</button>
         </div>
-        <div class="score-legend" style="margin-bottom: 12px;">
-          <div class="score-legend-item"><div class="bar" style="background: var(--danger);"></div>Pricing</div>
-          <div class="score-legend-item"><div class="bar" style="background: var(--blue);"></div>Bloat</div>
-          <div class="score-legend-item"><div class="bar" style="background: var(--success);"></div>SMB</div>
-          <div class="score-legend-item"><div class="bar" style="background: var(--accent);"></div>AI</div>
-          <div class="score-legend-item"><div class="bar" style="background: var(--accent-2);"></div>Feasibility</div>
+
+        <!-- Score Legend -->
+        <div class="flex gap-4 mb-4 flex-wrap">
+          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+            <div class="w-4 h-1 rounded bg-red-500"></div>Pricing
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+            <div class="w-4 h-1 rounded bg-blue-500"></div>Bloat
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+            <div class="w-4 h-1 rounded bg-green-500"></div>SMB
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+            <div class="w-4 h-1 rounded bg-orange-500"></div>AI
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+            <div class="w-4 h-1 rounded bg-yellow-500"></div>Feasibility
+          </div>
         </div>
-        <div class="feed" id="feed"></div>
+
+        <!-- Feed -->
+        <div class="space-y-3" id="feed"></div>
       </div>
 
       <!-- Import Tab -->
       <div class="tab-content" id="tab-import">
-        <div class="section-header"><h2><span class="icon">📥</span> Import Data</h2></div>
-
-        <div class="llm-card">
-          <h5>✏️ Manual Text Input</h5>
-          <div class="form-group">
-            <label>Platform</label>
-            <select id="importPlatform">
-              <option value="manual">Manual</option>
-              <option value="reddit">Reddit</option>
-              <option value="twitter">Twitter/X</option>
-              <option value="g2">G2 Reviews</option>
-              <option value="capterra">Capterra</option>
-              <option value="hackernews">Hacker News</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Source URL (optional)</label>
-            <input type="text" id="importUrl" placeholder="https://..." />
-          </div>
-          <div class="form-group">
-            <label>Content</label>
-            <textarea id="importContent" placeholder="Paste user complaint here...
-
-Examples:
-- HubSpot is too expensive for a small business. We only need basic CRM automation, lead tracking and follow-up reminders. Any cheaper alternative?
-- Jira is too complicated for our small team. We just need issue tracking and status updates without admin setup nightmare.
-- Zapier pricing sucks when multi-step automations run a lot of tasks."></textarea>
-          </div>
-          <button class="btn btn-primary" onclick="importText()" style="width: 100%;">Analyze & Generate Opportunity</button>
+        <div class="flex items-center gap-2 mb-6">
+          <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <span class="text-base">📥</span> Import Data
+          </h2>
         </div>
 
-        <div class="llm-card" style="margin-top: 16px;">
-          <h5>📄 CSV Import</h5>
-          <div class="form-group">
-            <label>Upload CSV File</label>
-            <input type="file" id="csvFile" accept=".csv" />
-            <p class="hint">Required columns: platform, source_url, author, content</p>
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>✏️</span> Manual Text Input
+          </h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Platform</label>
+              <select id="importPlatform" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg">
+                <option value="manual">Manual</option>
+                <option value="reddit">Reddit</option>
+                <option value="twitter">Twitter/X</option>
+                <option value="g2">G2 Reviews</option>
+                <option value="capterra">Capterra</option>
+                <option value="hackernews">Hacker News</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Source URL (optional)</label>
+              <input type="text" id="importUrl" placeholder="https://..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Content</label>
+              <textarea id="importContent" rows="4" placeholder="Paste user complaint here..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y"></textarea>
+            </div>
+            <button onclick="importText()" class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Analyze & Generate Opportunity</button>
           </div>
-          <button class="btn btn-secondary" onclick="importCSV()" style="width: 100%;">Import CSV</button>
         </div>
 
-        <div class="llm-card" style="margin-top: 16px;">
-          <h5>🌱 Seed Data</h5>
-          <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Load 15 pre-built samples demonstrating common SaaS pricing complaints across different categories.</p>
-          <button class="btn btn-secondary" onclick="seedData()" style="width: 100%;">Load 15 Seed Samples</button>
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>📄</span> CSV Import
+          </h3>
+          <div class="mb-3">
+            <input type="file" id="csvFile" accept=".csv" class="text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:bg-zinc-800 file:border file:border-zinc-700 file:rounded-lg file:text-zinc-300 file:text-xs file:font-medium file:cursor-pointer" />
+            <p class="text-[10px] text-zinc-500 mt-1.5">Required columns: platform, source_url, author, content</p>
+          </div>
+          <button onclick="importCSV()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Import CSV</button>
+        </div>
+
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+            <span>🌱</span> Seed Data
+          </h3>
+          <p class="text-xs text-zinc-500 mb-3">Load 15 pre-built samples demonstrating common SaaS pricing complaints across different categories.</p>
+          <button onclick="seedData()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Load 15 Seed Samples</button>
         </div>
       </div>
 
       <!-- Sources Tab -->
       <div class="tab-content" id="tab-sources">
-        <div class="section-header">
-          <h2><span class="icon">🔗</span> Data Sources</h2>
-          <span class="badge" id="dsActiveCount">0 active</span>
-        </div>
-        <div class="ds-list" id="dsList"></div>
-
-        <div class="llm-card" style="margin-top: 20px;">
-          <h5>📡 RSS Feeds</h5>
-          <div id="rssFeedList" style="margin-bottom: 12px;"></div>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="rssFeedUrl" placeholder="https://example.com/feed.xml" style="flex: 1;" />
-            <input type="text" id="rssFeedName" placeholder="Feed name" style="width: 120px;" />
-            <button class="btn btn-primary btn-sm" onclick="addRssFeed()">Add</button>
-          </div>
-          <button class="btn btn-secondary btn-sm" style="margin-top: 8px; width: 100%;" onclick="collectRss()">▶ Collect Now</button>
-        </div>
-
-        <div class="llm-card" style="margin-top: 16px;">
-          <h5>🔔 Notification Channels</h5>
-          <div class="channel-grid" id="channelGrid"></div>
-          <div id="notificationConfig" style="margin-top: 12px; display: none;">
-            <div class="form-group">
-              <label>Channel Config (JSON)</label>
-              <textarea id="notifConfigJson" rows="3" placeholder='{"webhook_url": "https://..."}'></textarea>
-            </div>
-            <div class="form-group">
-              <label>Message Content</label>
-              <textarea id="notifContent" rows="2" placeholder="Alert content..."></textarea>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="sendNotification()">Send Test Notification</button>
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-3">
+            <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+              <span class="text-base">🔗</span> Data Sources
+            </h2>
+            <span class="px-2 py-0.5 text-[10px] font-bold bg-orange-500/10 text-orange-500 rounded-md" id="dsActiveCount">0 active</span>
           </div>
         </div>
+        <div class="space-y-2 mb-6" id="dsList"></div>
 
-        <div class="llm-card" style="margin-top: 16px;">
-          <h5>⏰ Scheduler</h5>
-          <div class="scheduler-presets" id="schedulerPresets">
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>📡</span> RSS Feeds
+          </h3>
+          <div id="rssFeedList" class="space-y-2 mb-3"></div>
+          <div class="flex gap-2 mb-2">
+            <input type="text" id="rssFeedUrl" placeholder="https://example.com/feed.xml" class="flex-1 bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
+            <input type="text" id="rssFeedName" placeholder="Feed name" class="w-28 bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
+            <button onclick="addRssFeed()" class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Add</button>
+          </div>
+          <button onclick="collectRss()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors mt-2">▶ Collect Now</button>
+        </div>
+
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>🔔</span> Notification Channels
+          </h3>
+          <div class="grid grid-cols-2 gap-2 mb-3" id="channelGrid"></div>
+          <div id="notificationConfig" class="hidden space-y-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Channel Config (JSON)</label>
+              <textarea id="notifConfigJson" rows="2" placeholder='{"webhook_url": "https://..."}' class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y"></textarea>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Message Content</label>
+              <textarea id="notifContent" rows="2" placeholder="Alert content..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y"></textarea>
+            </div>
+            <button onclick="sendNotification()" class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Send Test Notification</button>
+          </div>
+        </div>
+
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>⏰</span> Scheduler
+          </h3>
+          <div class="flex flex-wrap gap-2 mb-3" id="schedulerPresets">
             <button class="preset-btn active" data-preset="always_on">Always On</button>
             <button class="preset-btn" data-preset="morning_evening">Morning & Evening</button>
             <button class="preset-btn" data-preset="office_hours">Office Hours</button>
             <button class="preset-btn" data-preset="night_owl">Night Owl</button>
           </div>
-          <div id="schedulerStatus" style="font-size: 12px; color: var(--muted); margin-top: 8px;"></div>
+          <div id="schedulerStatus" class="text-xs text-zinc-500 mt-2"></div>
         </div>
       </div>
 
       <!-- LLM Tab -->
       <div class="tab-content" id="tab-llm">
-        <div class="section-header"><h2><span class="icon">🤖</span> LLM Configuration</h2></div>
-        <div class="llm-active-row" id="llmActiveRow">
-          <span class="dot"></span>
+        <div class="flex items-center gap-2 mb-6">
+          <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <span class="text-base">🤖</span> LLM Configuration
+          </h2>
+        </div>
+
+        <div id="llmActiveRow" class="flex items-center gap-2 px-3 py-2 bg-green-500/10 border border-green-500/20 rounded-lg mb-4 text-xs text-green-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
           <span id="llmActiveText">Rule-based mode (no API key)</span>
         </div>
 
-        <div class="llm-card">
-          <h5>🦀 Claude <span class="tag">Recommended</span></h5>
-          <div class="form-group">
-            <label>API Key</label>
-            <input type="password" id="claudeKey" placeholder="sk-ant-..." />
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>🦀</span> Claude <span class="px-1.5 py-0.5 text-[9px] font-bold bg-orange-500/10 text-orange-500 rounded uppercase tracking-wider">Recommended</span>
+          </h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">API Key</label>
+              <input type="password" id="claudeKey" placeholder="sk-ant-..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Model</label>
+              <select id="claudeModel" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg">
+                <option value="claude-3-5-sonnet-20241023">Claude 3.5 Sonnet (Recommended)</option>
+                <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                <option value="claude-3-haiku-20240229">Claude 3 Haiku</option>
+              </select>
+            </div>
+            <button onclick="saveLlMConfig('claude')" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Save Claude</button>
           </div>
-          <div class="form-group">
-            <label>Model</label>
-            <select id="claudeModel">
-              <option value="claude-3-5-sonnet-20241023">Claude 3.5 Sonnet (Recommended)</option>
-              <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-              <option value="claude-3-haiku-20240229">Claude 3 Haiku</option>
-            </select>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="saveLlMConfig('claude')">Save Claude</button>
         </div>
 
-        <div class="llm-card">
-          <h5>🤖 MiniMax / OpenAI</h5>
-          <div class="form-group">
-            <label>API Key</label>
-            <input type="password" id="openaiKey" placeholder="sk-cp-..." />
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>🤖</span> MiniMax / OpenAI
+          </h3>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">API Key</label>
+              <input type="password" id="openaiKey" placeholder="sk-cp-..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Model</label>
+              <select id="openaiModel" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg">
+                <option value="MiniMax-Text-01">MiniMax-Text-01 (Recommended)</option>
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Base URL</label>
+              <input type="text" id="openaiBaseUrl" placeholder="https://api.minimax.chat/v1" class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600" />
+            </div>
+            <button onclick="saveLlMConfig('openai')" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors">Save MiniMax/OpenAI</button>
           </div>
-          <div class="form-group">
-            <label>Model</label>
-            <select id="openaiModel">
-              <option value="MiniMax-Text-01">MiniMax-Text-01 (Recommended)</option>
-              <option value="gpt-4o">GPT-4o</option>
-              <option value="gpt-4-turbo">GPT-4 Turbo</option>
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Base URL</label>
-            <input type="text" id="openaiBaseUrl" placeholder="https://api.minimax.chat/v1" />
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="saveLlMConfig('openai')">Save MiniMax/OpenAI</button>
         </div>
 
-        <div class="llm-card" style="margin-top: 16px;">
-          <h5>📋 Current Configuration</h5>
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>📋</span> Current Configuration
+          </h3>
           <div id="llmStatusList"></div>
         </div>
 
-        <div class="llm-card" style="margin-top: 16px;">
-          <h5>🎯 AI Filter Interests</h5>
-          <div class="form-group">
-            <label>Interest Tags (one per line, format: TagName: keyword1, keyword2)</label>
-            <textarea id="aiFilterInterests" rows="5" placeholder="#Pricing
-pricing: too expensive, overpriced, cost too much
-alternative: cheaper alternative,替代
-
-#Bloat
-bloat: bloated, too complicated, enterprise overkill
-
-#SMB
-small business: small business, smb, startup, freelancer"></textarea>
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl p-5">
+          <h3 class="text-sm font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+            <span>🎯</span> AI Filter Interests
+          </h3>
+          <div class="mb-3">
+            <textarea id="aiFilterInterests" rows="5" placeholder="#Pricing&#10;pricing: too expensive, overpriced, cost too much&#10;..." class="w-full bg-zinc-800 border border-zinc-700/50 text-zinc-200 text-xs px-3 py-2 rounded-lg placeholder:text-zinc-600 resize-y font-mono"></textarea>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="saveAiFilterInterests()">Save AI Filter</button>
+          <button onclick="saveAiFilterInterests()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700/50 transition-colors">Save AI Filter</button>
         </div>
       </div>
 
       <!-- Tasks Tab -->
       <div class="tab-content" id="tab-tasks">
-        <div class="section-header">
-          <h2><span class="icon">⚙️</span> Background Tasks</h2>
-          <button class="btn btn-ghost btn-sm" onclick="loadTasks()">↻ Refresh</button>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <span class="text-base">⚙️</span> Background Tasks
+          </h2>
+          <button onclick="loadTasks()" class="px-3 py-1.5 bg-transparent hover:bg-zinc-800 text-zinc-500 text-xs font-medium rounded-lg transition-colors">↻ Refresh</button>
         </div>
-        <div class="task-list" id="taskList"></div>
+        <div class="space-y-2" id="taskList"></div>
       </div>
-    </div>
+    </main>
 
     <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-panel">
-        <h4>Quick Actions</h4>
-        <button class="btn btn-primary" onclick="seedData()" style="width: 100%;">🌱 Load Seed Data</button>
-        <button class="btn btn-secondary" onclick="clearAll()" style="width: 100%; margin-top: 8px;">🗑️ Clear All</button>
+    <aside class="w-[280px] bg-zinc-950/50 border-l border-zinc-800/50 p-5 overflow-y-auto max-h-[calc(100vh-60px)]">
+      <div class="mb-6">
+        <button onclick="seedData()" class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-orange-500/10">🌱 Load Seed Data</button>
+        <button onclick="clearAll()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-medium rounded-lg border border-zinc-700/50 transition-colors mt-2">🗑️ Clear All</button>
       </div>
 
-      <div class="sidebar-panel">
-        <h4>Scoring Weights</h4>
-        <div style="font-size: 12px; color: var(--text-secondary); line-height: 2;">
-          <div style="display: flex; justify-content: space-between;"><span>💰 Pricing Pain</span><span style="color: var(--danger); font-weight: 700;">30%</span></div>
-          <div style="display: flex; justify-content: space-between;"><span>🤖 AI Compression</span><span style="color: var(--accent); font-weight: 700;">22%</span></div>
-          <div style="display: flex; justify-content: space-between;"><span>📦 Feature Bloat</span><span style="color: var(--blue); font-weight: 700;">18%</span></div>
-          <div style="display: flex; justify-content: space-between;"><span>🏢 SMB Overkill</span><span style="color: var(--success); font-weight: 700;">16%</span></div>
-          <div style="display: flex; justify-content: space-between;"><span>✅ Feasibility</span><span style="color: var(--accent-2); font-weight: 700;">14%</span></div>
+      <div class="mb-6">
+        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
+          Scoring Weights
+          <span class="flex-1 h-px bg-zinc-800"></span>
+        </h4>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between"><span class="text-zinc-400">💰 Pricing Pain</span><span class="font-bold text-red-400">30%</span></div>
+          <div class="flex justify-between"><span class="text-zinc-400">🤖 AI Compression</span><span class="font-bold text-orange-400">22%</span></div>
+          <div class="flex justify-between"><span class="text-zinc-400">📦 Feature Bloat</span><span class="font-bold text-blue-400">18%</span></div>
+          <div class="flex justify-between"><span class="text-zinc-400">🏢 SMB Overkill</span><span class="font-bold text-green-400">16%</span></div>
+          <div class="flex justify-between"><span class="text-zinc-400">✅ Feasibility</span><span class="font-bold text-yellow-400">14%</span></div>
         </div>
       </div>
 
-      <div class="sidebar-panel">
-        <h4>Software Catalog</h4>
-        <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.9;">
-          <div><span style="color: var(--text);">CRM</span> — HubSpot, Salesforce, Pipedrive</div>
-          <div><span style="color: var(--text);">Proposal</span> — PandaDoc, DocuSign</div>
-          <div><span style="color: var(--text);">Automation</span> — Zapier, Make, n8n</div>
-          <div><span style="color: var(--text);">PM</span> — Jira, Monday, Asana, ClickUp</div>
-          <div><span style="color: var(--text);">Support</span> — Zendesk, Intercom</div>
-          <div><span style="color: var(--text);">Internal</span> — Airtable, Smartsheet, Notion</div>
+      <div class="mb-6">
+        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
+          Software Catalog
+          <span class="flex-1 h-px bg-zinc-800"></span>
+        </h4>
+        <div class="space-y-1.5 text-[11px] text-zinc-500">
+          <div><span class="text-zinc-400">CRM</span> — HubSpot, Salesforce, Pipedrive</div>
+          <div><span class="text-zinc-400">Proposal</span> — PandaDoc, DocuSign</div>
+          <div><span class="text-zinc-400">Automation</span> — Zapier, Make, n8n</div>
+          <div><span class="text-zinc-400">PM</span> — Jira, Monday, Asana, ClickUp</div>
+          <div><span class="text-zinc-400">Support</span> — Zendesk, Intercom</div>
+          <div><span class="text-zinc-400">Internal</span> — Airtable, Smartsheet, Notion</div>
         </div>
       </div>
 
-      <div class="sidebar-panel">
-        <h4>System Status</h4>
-        <div style="font-size: 12px;">
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border);"><span>Engine</span><span id="engineStatus" style="color: var(--accent);">Rule-based</span></div>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border);"><span>LLM</span><span id="llmStatusSidebar" style="color: var(--muted);">Not configured</span></div>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border);"><span>Database</span><span style="color: var(--success);">SQLite</span></div>
-          <div style="display: flex; justify-content: space-between; padding: 7px 0;"><span>Data Sources</span><span id="dsCount" style="color: var(--accent-2);">0 active</span></div>
+      <div class="mb-6">
+        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
+          System Status
+          <span class="flex-1 h-px bg-zinc-800"></span>
+        </h4>
+        <div class="space-y-0 text-xs">
+          <div class="flex justify-between py-2 border-b border-zinc-800/50"><span class="text-zinc-400">Engine</span><span id="engineStatus" class="text-orange-400">Rule-based</span></div>
+          <div class="flex justify-between py-2 border-b border-zinc-800/50"><span class="text-zinc-400">LLM</span><span id="llmStatusSidebar" class="text-zinc-500">Not configured</span></div>
+          <div class="flex justify-between py-2 border-b border-zinc-800/50"><span class="text-zinc-400">Database</span><span class="text-green-400">SQLite</span></div>
+          <div class="flex justify-between py-2"><span class="text-zinc-400">Data Sources</span><span id="dsCount" class="text-yellow-400">0 active</span></div>
         </div>
       </div>
 
-      <div class="sidebar-panel">
-        <h4>Keyboard Shortcuts</h4>
-        <div style="font-size: 11px; color: var(--muted); line-height: 1.8;">
-          <div><kbd style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px;">F</kbd> Feed</div>
-          <div><kbd style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px;">I</kbd> Import</div>
-          <div><kbd style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px;">S</kbd> Sources</div>
-          <div><kbd style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px;">L</kbd> LLM Config</div>
-          <div><kbd style="background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 10px;">T</kbd> Tasks</div>
+      <div>
+        <h4 class="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold mb-3 flex items-center gap-2">
+          Keyboard Shortcuts
+          <span class="flex-1 h-px bg-zinc-800"></span>
+        </h4>
+        <div class="space-y-1.5 text-[11px] text-zinc-500">
+          <div><kbd>F</kbd> Feed</div>
+          <div><kbd>I</kbd> Import</div>
+          <div><kbd>S</kbd> Sources</div>
+          <div><kbd>L</kbd> LLM Config</div>
+          <div><kbd>T</kbd> Tasks</div>
         </div>
       </div>
     </aside>
-  </main>
+  </div>
 
   <div class="toast" id="toastContent"></div>
 
   <script src="/static/app.js"></script>
   <script>
+    // ── Nav Button Styles ──
+    const style = document.createElement('style');
+    style.textContent = `
+      .nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        border: none;
+        color: #a1a1aa;
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 7px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .nav-btn:hover { color: #fafafa; background: #27272a; }
+      .nav-btn.active { color: #f97316; background: rgba(249, 115, 22, 0.15); }
+      .nav-btn.active span:first-child { background: #f97316; }
+      .nav-btn span:first-child { transition: background 0.15s; }
+      .stat-card {
+        background: #18181b;
+        border: 1px solid #3f3f46;
+        border-radius: 14px;
+        padding: 16px 18px;
+      }
+      .preset-btn {
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #27272a;
+        border: 1px solid #3f3f46;
+        color: #a1a1aa;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .preset-btn:hover { border-color: #52525b; color: #fafafa; }
+      .preset-btn.active { background: rgba(249, 115, 22, 0.15); border-color: #f97316; color: #f97316; }
+    `;
+    document.head.appendChild(style);
+
     // ── API Helper ──
     async function api(path, options = {}) {
       try {
@@ -557,14 +659,12 @@ small business: small business, smb, startup, freelancer"></textarea>
           throw new Error(text || `HTTP ${res.status}`);
         }
         return res.json();
-      } catch (e) {
-        throw e;
-      }
+      } catch (e) { throw e; }
     }
 
     // ── Toast ──
     function showToast(msg, type = 'success') {
-      const toast = document.querySelector('#toastContent');
+      const toast = document.getElementById('toastContent');
       toast.textContent = msg;
       toast.className = `toast ${type} show`;
       setTimeout(() => toast.classList.remove('show'), 3500);
@@ -587,27 +687,27 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadStats() {
       try {
         const s = await api('/api/stats');
-        document.querySelector('#statTotal').textContent = s.total;
-        document.querySelector('#statAvg').textContent = s.avg_score;
-        document.querySelector('#statSoftware').textContent = fmtTop(s.top_software);
-        document.querySelector('#statSoftwareCount').textContent = fmtCount(s.top_software);
-        document.querySelector('#statComplaints').textContent = `${s.total_complaints} complaints`;
-        document.querySelector('#statLlm').textContent = s.llm_enabled ? 'LLM' : 'Rule';
-        document.querySelector('#statLlmSub').textContent = s.llm_enabled ? 'active' : 'no API key';
-        document.querySelector('#statLlm').className = s.llm_enabled ? 'value accent' : 'value';
+        document.getElementById('statTotal').textContent = s.total;
+        document.getElementById('statAvg').textContent = s.avg_score;
+        document.getElementById('statSoftware').textContent = fmtTop(s.top_software);
+        document.getElementById('statSoftwareCount').textContent = fmtCount(s.top_software);
+        document.getElementById('statComplaints').textContent = `${s.total_complaints} complaints`;
+        document.getElementById('statLlm').textContent = s.llm_enabled ? 'LLM' : 'Rule';
+        document.getElementById('statLlmSub').textContent = s.llm_enabled ? 'active' : 'no API key';
+        document.getElementById('statLlm').className = s.llm_enabled ? 'font-mono text-lg font-bold text-orange-500' : 'font-mono text-lg font-bold text-zinc-100';
 
-        document.querySelector('#engineStatus').textContent = s.llm_enabled ? '● LLM' : '● Rule-based';
-        document.querySelector('#llmStatusSidebar').textContent = s.llm_enabled ? '● Active' : 'Not configured';
-        document.querySelector('#dsCount').textContent = `${s.total_datasources} active`;
+        document.getElementById('engineStatus').textContent = s.llm_enabled ? '● LLM' : '● Rule-based';
+        document.getElementById('llmStatusSidebar').textContent = s.llm_enabled ? '● Active' : 'Not configured';
+        document.getElementById('dsCount').textContent = `${s.total_datasources} active`;
 
-        // Header API status
-        const apiStatus = document.querySelector('#apiStatus');
-        const apiKeyName = document.querySelector('#apiKeyName');
+        const apiStatus = document.getElementById('apiStatus');
+        const apiDot = document.getElementById('apiDot');
+        const apiKeyName = document.getElementById('apiKeyName');
         if (s.llm_enabled) {
-          apiStatus.classList.add('active');
+          apiDot.className = 'w-1.5 h-1.5 rounded-full bg-green-500 pulse-glow';
           apiKeyName.textContent = 'LLM Active';
         } else {
-          apiStatus.classList.remove('active');
+          apiDot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
           apiKeyName.textContent = 'Rule mode';
         }
       } catch (e) { console.error('stats error', e); }
@@ -617,54 +717,63 @@ small business: small business, smb, startup, freelancer"></textarea>
     function renderOpp(o) {
       const scoreWidth = (score) => Math.min(100, score * 10) + '%';
       return `
-        <article class="opp-card">
-          <div class="opp-header">
-            <div class="opp-software">
-              <h3>${o.software}</h3>
-              <span class="opp-badge">${o.category}</span>
+        <article class="card-hover bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-5 animate-fade-in">
+          <div class="flex justify-between items-start mb-3 gap-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-sm font-bold text-zinc-100">${o.software}</h3>
+              <span class="px-2 py-0.5 text-[10px] font-semibold bg-blue-500/10 text-blue-400 rounded-md">${o.category}</span>
             </div>
-            <div class="opp-score">
-              <strong>${o.disruption_score}</strong>
-              <span>score</span>
+            <div class="flex flex-col items-center min-w-[48px]">
+              <strong class="font-mono text-xl font-bold text-orange-500 leading-none">${o.disruption_score}</strong>
+              <span class="text-[9px] uppercase tracking-wider text-zinc-500 mt-1">score</span>
             </div>
           </div>
-          <div class="opp-meta">
-            <span class="time">${timeAgo(o.created_at)}</span>
+          <div class="flex items-center gap-3 text-[11px] text-zinc-500 mb-3 flex-wrap">
+            <span class="font-mono">${timeAgo(o.created_at)}</span>
             <span>${o.actual_workflow}</span>
-            ${o.pricing_signal ? '<span style="color: var(--danger);">💰 pricing</span>' : ''}
-            ${o.bloat_signal ? '<span style="color: var(--blue);">📦 bloat</span>' : ''}
-            ${o.smb_signal ? '<span style="color: var(--success);">🏢 smb</span>' : ''}
+            ${o.pricing_signal ? '<span class="text-red-400">💰 pricing</span>' : ''}
+            ${o.bloat_signal ? '<span class="text-blue-400">📦 bloat</span>' : ''}
+            ${o.smb_signal ? '<span class="text-green-400">🏢 smb</span>' : ''}
           </div>
-          <div class="opp-grid">
-            <div class="opp-box"><b>Complaint</b><div class="value">${o.complaint_summary}</div></div>
-            <div class="opp-box"><b>Workflow</b><div class="value">${o.actual_workflow}</div></div>
-            <div class="opp-box full"><b>AI-native Replacement</b><div class="value" style="color: var(--accent);">${o.ai_native_replacement}</div></div>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="bg-zinc-800/80 rounded-lg p-3">
+              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Complaint</div>
+              <div class="text-xs text-zinc-300 leading-relaxed">${o.complaint_summary}</div>
+            </div>
+            <div class="bg-zinc-800/80 rounded-lg p-3">
+              <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Workflow</div>
+              <div class="text-xs text-zinc-300 leading-relaxed">${o.actual_workflow}</div>
+            </div>
           </div>
-          ${o.evidence ? `<div class="opp-evidence">"${o.evidence.slice(0, 200)}${o.evidence.length > 200 ? '...' : ''}"</div>` : ''}
-          <div class="score-breakdown">
-            <div class="score-bar" title="Pricing Pain"><div class="score-bar-fill pricing" style="width:${scoreWidth(o.pricing_pain_score)}"></div></div>
-            <div class="score-bar" title="Feature Bloat"><div class="score-bar-fill bloat" style="width:${scoreWidth(o.feature_bloat_score)}"></div></div>
-            <div class="score-bar" title="SMB Overkill"><div class="score-bar-fill smb" style="width:${scoreWidth(o.smb_overkill_score)}"></div></div>
-            <div class="score-bar" title="AI Compression"><div class="score-bar-fill ai" style="width:${scoreWidth(o.ai_compression_score)}"></div></div>
-            <div class="score-bar" title="Feasibility"><div class="score-bar-fill feas" style="width:${scoreWidth(o.replacement_feasibility_score)}"></div></div>
+          <div class="bg-zinc-800/80 rounded-lg p-3 mb-3">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">AI-native Replacement</div>
+            <div class="text-xs text-orange-400 leading-relaxed">${o.ai_native_replacement}</div>
+          </div>
+          ${o.evidence ? `<div class="text-[11px] text-zinc-500 italic border-l-2 border-zinc-700 pl-3 mb-3 leading-relaxed">"${o.evidence.slice(0, 200)}${o.evidence.length > 200 ? '...' : ''}"</div>` : ''}
+          <div class="flex gap-1">
+            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-red-500" style="width:${scoreWidth(o.pricing_pain_score)}"></div></div>
+            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-blue-500" style="width:${scoreWidth(o.feature_bloat_score)}"></div></div>
+            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-green-500" style="width:${scoreWidth(o.smb_overkill_score)}"></div></div>
+            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-orange-500" style="width:${scoreWidth(o.ai_compression_score)}"></div></div>
+            <div class="flex-1"><div class="score-bar-fill h-1 rounded bg-yellow-500" style="width:${scoreWidth(o.replacement_feasibility_score)}"></div></div>
           </div>
         </article>`;
     }
 
     // ── Load Feed ──
     async function loadFeed() {
-      const min = document.querySelector('#filterScore').value;
-      const software = document.querySelector('#filterSoftware').value;
-      const category = document.querySelector('#filterCategory').value;
+      const min = document.getElementById('filterScore').value;
+      const software = document.getElementById('filterSoftware').value;
+      const category = document.getElementById('filterCategory').value;
       let url = `/api/opportunities?min_score=${min}`;
       if (software) url += `&software=${encodeURIComponent(software)}`;
       if (category) url += `&category=${encodeURIComponent(category)}`;
       try {
         const data = await api(url);
-        const feed = document.querySelector('#feed');
-        document.querySelector('#feedCount').textContent = data.length;
+        const feed = document.getElementById('feed');
+        document.getElementById('feedCount').textContent = data.length;
         if (!data.length) {
-          feed.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><h3>No opportunities found</h3><p>Import some data or load seed data to get started.</p><button class="btn btn-primary" onclick="seedData()">Load Seed Data</button></div>`;
+          feed.innerHTML = `<div class="text-center py-12 text-zinc-500"><div class="text-4xl mb-3 opacity-30">📭</div><h3 class="text-sm font-medium text-zinc-300 mb-2">No opportunities found</h3><p class="text-xs text-zinc-600 mb-4">Import some data or load seed data to get started.</p><button class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition-colors" onclick="seedData()">Load Seed Data</button></div>`;
         } else {
           feed.innerHTML = data.map(renderOpp).join('');
         }
@@ -672,26 +781,26 @@ small business: small business, smb, startup, freelancer"></textarea>
     }
 
     function resetFilters() {
-      document.querySelector('#filterScore').value = '0';
-      document.querySelector('#filterSoftware').value = '';
-      document.querySelector('#filterCategory').value = '';
+      document.getElementById('filterScore').value = '0';
+      document.getElementById('filterSoftware').value = '';
+      document.getElementById('filterCategory').value = '';
       loadFeed();
     }
 
     // ── Import Text ──
     async function importText() {
-      const content = document.querySelector('#importContent').value.trim();
+      const content = document.getElementById('importContent').value.trim();
       if (!content) { showToast('Please enter content', 'error'); return; }
-      const platform = document.querySelector('#importPlatform').value || 'manual';
-      const source_url = document.querySelector('#importUrl').value || '';
-      const author = document.querySelector('#importAuthor')?.value || '';
+      const platform = document.getElementById('importPlatform').value || 'manual';
+      const source_url = document.getElementById('importUrl').value || '';
+      const author = '';
       try {
         await api('/api/ingest/text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content, platform, source_url, author })
         });
-        document.querySelector('#importContent').value = '';
+        document.getElementById('importContent').value = '';
         showToast('Opportunity generated!', 'success');
         await loadStats();
         await loadFeed();
@@ -700,7 +809,7 @@ small business: small business, smb, startup, freelancer"></textarea>
 
     // ── Import CSV ──
     async function importCSV() {
-      const file = document.querySelector('#csvFile').files[0];
+      const file = document.getElementById('csvFile').files[0];
       if (!file) { showToast('Please select a CSV file', 'error'); return; }
       const formData = new FormData();
       formData.append('file', file);
@@ -737,23 +846,22 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadDataSources() {
       try {
         const sources = await api('/api/datasources');
-        const list = document.querySelector('#dsList');
+        const list = document.getElementById('dsList');
         list.innerHTML = sources.map(ds => `
-          <div class="ds-item ${ds.enabled ? 'active' : ''}">
-            <div class="ds-icon">${DS_ICONS[ds.source] || '📦'}</div>
-            <div class="ds-info">
-              <strong>${DS_NAMES[ds.source] || ds.source}</strong>
-              <span>${ds.total_collected || 0} collected · ${ds.success_count || 0} success · ${ds.error_count || 0} errors</span>
+          <div class="flex items-center gap-3 p-3 bg-zinc-900/80 border border-zinc-800/80 rounded-lg transition-colors ${ds.enabled ? 'border-green-500/20' : ''}">
+            <div class="w-9 h-9 rounded-lg bg-zinc-800 flex items-center justify-center text-base">${DS_ICONS[ds.source] || '📦'}</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-zinc-200">${DS_NAMES[ds.source] || ds.source}</div>
+              <div class="text-[11px] text-zinc-500">${ds.total_collected || 0} collected · ${ds.success_count || 0} success · ${ds.error_count || 0} errors</div>
             </div>
-            <div class="ds-actions">
-              <button class="btn btn-ghost btn-sm" onclick="collectDs('${ds.source}')" title="Collect">▶</button>
+            <div class="flex items-center gap-2">
+              <button onclick="collectDs('${ds.source}')" class="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors" title="Collect">▶</button>
               <div class="toggle ${ds.enabled ? 'active' : ''}" onclick="toggleDs('${ds.source}', ${!ds.enabled})"></div>
             </div>
           </div>
         `).join('');
-
         const activeCount = sources.filter(s => s.enabled).length;
-        document.querySelector('#dsActiveCount').textContent = `${activeCount} active`;
+        document.getElementById('dsActiveCount').textContent = `${activeCount} active`;
       } catch (e) { console.error(e); }
     }
 
@@ -782,16 +890,16 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadRssFeeds() {
       try {
         const result = await api('/api/rss/feeds');
-        const list = document.querySelector('#rssFeedList');
+        const list = document.getElementById('rssFeedList');
         if (!result.feeds || !result.feeds.length) {
-          list.innerHTML = '<div style="font-size: 12px; color: var(--muted); padding: 8px 0;">No feeds configured. Add one below.</div>';
+          list.innerHTML = '<div class="text-xs text-zinc-600 py-2">No feeds configured. Add one below.</div>';
         } else {
           list.innerHTML = result.feeds.map(f => `
-            <div class="rss-feed-item">
-              <span class="icon">📡</span>
-              <span class="url" title="${f.url}">${f.name || f.url}</span>
-              <span style="font-size: 11px; color: var(--muted);">${f.max_age_days || 30}d</span>
-              <span class="remove" onclick="deleteRssFeed('${f.url}')">✕</span>
+            <div class="flex items-center gap-2 p-2 bg-zinc-800/80 border border-zinc-700/50 rounded-lg">
+              <span class="text-sm">📡</span>
+              <span class="flex-1 font-mono text-[11px] text-zinc-400 truncate" title="${f.url}">${f.name || f.url}</span>
+              <span class="text-[10px] text-zinc-600">${f.max_age_days || 30}d</span>
+              <button onclick="deleteRssFeed('${f.url}')" class="text-zinc-600 hover:text-red-400 text-sm transition-colors">✕</button>
             </div>
           `).join('');
         }
@@ -799,8 +907,8 @@ small business: small business, smb, startup, freelancer"></textarea>
     }
 
     async function addRssFeed() {
-      const url = document.querySelector('#rssFeedUrl').value.trim();
-      const name = document.querySelector('#rssFeedName').value.trim();
+      const url = document.getElementById('rssFeedUrl').value.trim();
+      const name = document.getElementById('rssFeedName').value.trim();
       if (!url) { showToast('Please enter a feed URL', 'error'); return; }
       try {
         await api('/api/rss/feeds', {
@@ -808,8 +916,8 @@ small business: small business, smb, startup, freelancer"></textarea>
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ feed_url: url, feed_name: name, max_age_days: 30 })
         });
-        document.querySelector('#rssFeedUrl').value = '';
-        document.querySelector('#rssFeedName').value = '';
+        document.getElementById('rssFeedUrl').value = '';
+        document.getElementById('rssFeedName').value = '';
         showToast('Feed added', 'success');
         await loadRssFeeds();
       } catch (e) { showToast('Failed to add feed: ' + e.message, 'error'); }
@@ -835,10 +943,10 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadNotificationChannels() {
       try {
         const result = await api('/api/notifications/channels');
-        const grid = document.querySelector('#channelGrid');
+        const grid = document.getElementById('channelGrid');
         grid.innerHTML = result.channels.map(ch => `
-          <div class="channel-item" onclick="selectChannel('${ch.id}')" data-channel="${ch.id}">
-            <span class="icon">${getChannelIcon(ch.id)}</span>
+          <div onclick="selectChannel('${ch.id}')" data-channel="${ch.id}" class="p-2.5 bg-zinc-800/80 border border-zinc-700/50 rounded-lg text-xs flex items-center gap-2 cursor-pointer hover:border-zinc-600 transition-colors">
+            <span>${getChannelIcon(ch.id)}</span>
             <span>${ch.name}</span>
           </div>
         `).join('');
@@ -852,29 +960,26 @@ small business: small business, smb, startup, freelancer"></textarea>
 
     function selectChannel(channelId) {
       document.querySelectorAll('.channel-item').forEach(el => el.style.borderColor = '');
-      document.querySelector(`[data-channel="${channelId}"]`).style.borderColor = 'var(--accent)';
-      document.querySelector('#notificationConfig').style.display = 'block';
-      document.querySelector('#notifContent').value = `Test notification from Too Expensive Radar at ${new Date().toLocaleTimeString()}`;
+      const el = document.querySelector(`[data-channel="${channelId}"]`);
+      if (el) el.style.borderColor = '#f97316';
+      document.getElementById('notificationConfig').classList.remove('hidden');
+      document.getElementById('notifContent').value = `Test notification from Too Expensive Radar at ${new Date().toLocaleTimeString()}`;
     }
 
     async function sendNotification() {
-      const configJson = document.querySelector('#notifConfigJson').value.trim();
-      const content = document.querySelector('#notifContent').value.trim();
-      const selected = document.querySelector('.channel-item[style*="border-color: var(--accent)"]');
+      const configJson = document.getElementById('notifConfigJson').value.trim();
+      const content = document.getElementById('notifContent').value.trim();
+      const selected = document.querySelector('[data-channel]');
       if (!selected) { showToast('Please select a channel first', 'error'); return; }
       const channel = selected.dataset.channel;
-
       try {
         const result = await api('/api/notifications/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ channel, content, config: configJson })
         });
-        if (result.success) {
-          showToast(`${channel} notification sent!`, 'success');
-        } else {
-          showToast(`${channel} failed: ${result.message}`, 'error');
-        }
+        if (result.success) showToast(`${channel} notification sent!`, 'success');
+        else showToast(`${channel} failed: ${result.message}`, 'error');
       } catch (e) { showToast('Failed: ' + e.message, 'error'); }
     }
 
@@ -882,16 +987,14 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadScheduler() {
       try {
         const status = await api('/api/scheduler/status');
-        document.querySelector('#schedulerStatus').innerHTML = `
-          <span style="color: ${status.active ? 'var(--success)' : 'var(--muted)'};">● ${status.active ? status.period : 'inactive'}</span> ·
+        document.getElementById('schedulerStatus').innerHTML = `
+          <span class="${status.active ? 'text-green-400' : 'text-zinc-500'}">● ${status.active ? status.period : 'inactive'}</span> ·
           Crawl: ${status.should_crawl ? '✅' : '❌'} ·
           Analyze: ${status.should_analyze ? '✅' : '❌'} ·
           Push: ${status.should_push ? '✅' : '❌'}
         `;
-
         document.querySelectorAll('.preset-btn').forEach(btn => {
-          btn.classList.toggle('active', false);
-          if (btn.dataset.preset === 'always_on') btn.classList.add('active');
+          btn.classList.toggle('active', btn.dataset.preset === 'always_on');
         });
       } catch (e) { console.error(e); }
     }
@@ -912,9 +1015,9 @@ small business: small business, smb, startup, freelancer"></textarea>
     // ── LLM Config ──
     async function saveLlMConfig(provider) {
       const isClaude = provider === 'claude';
-      const key = isClaude ? document.querySelector('#claudeKey').value : document.querySelector('#openaiKey').value;
-      const model = isClaude ? document.querySelector('#claudeModel').value : document.querySelector('#openaiModel').value;
-      const baseUrl = isClaude ? '' : document.querySelector('#openaiBaseUrl').value;
+      const key = isClaude ? document.getElementById('claudeKey').value : document.getElementById('openaiKey').value;
+      const model = isClaude ? document.getElementById('claudeModel').value : document.getElementById('openaiModel').value;
+      const baseUrl = isClaude ? '' : document.getElementById('openaiBaseUrl').value;
       const enabled = !!key;
       try {
         await api(`/api/llm/configs/${provider}`, {
@@ -931,18 +1034,17 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadLlMConfigs() {
       try {
         const configs = await api('/api/llm/configs');
-        const list = document.querySelector('#llmStatusList');
+        const list = document.getElementById('llmStatusList');
         const enabledConfig = configs.find(c => c.enabled);
         const activeText = enabledConfig
           ? `● ${enabledConfig.provider === 'claude' ? '🦀' : '🤖'} ${enabledConfig.model} active`
           : 'Rule-based mode (no API key)';
-        document.querySelector('#llmActiveRow').innerHTML = `<span class="dot"></span><span>${activeText}</span>`;
-        document.querySelector('#llmActiveText').textContent = activeText;
-
+        document.getElementById('llmActiveRow').innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${enabledConfig ? 'bg-green-500' : 'bg-zinc-500'}"></span><span>${activeText}</span>`;
+        document.getElementById('llmActiveText').textContent = activeText;
         list.innerHTML = configs.map(c => `
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px;">
-            <span>${c.provider === 'claude' ? '🦀' : '🤖'} ${c.provider}</span>
-            <span style="color: ${c.enabled ? 'var(--success)' : 'var(--muted)'};">${c.enabled ? '● ' + c.model : 'disabled'}</span>
+          <div class="flex justify-between py-2 ${configs.indexOf(c) < configs.length - 1 ? 'border-b border-zinc-800/50' : ''}">
+            <span class="text-xs ${c.provider === 'claude' ? 'text-zinc-300' : 'text-zinc-300'}">${c.provider === 'claude' ? '🦀' : '🤖'} ${c.provider}</span>
+            <span class="text-xs ${c.enabled ? 'text-green-400' : 'text-zinc-600'}">${c.enabled ? '● ' + c.model : 'disabled'}</span>
           </div>
         `).join('');
       } catch (e) { console.error(e); }
@@ -952,14 +1054,12 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadAiFilterInterests() {
       try {
         const result = await api('/api/ai/filter/interests');
-        if (result.interests) {
-          document.querySelector('#aiFilterInterests').value = result.interests;
-        }
+        if (result.interests) document.getElementById('aiFilterInterests').value = result.interests;
       } catch (e) { console.error(e); }
     }
 
     async function saveAiFilterInterests() {
-      const interests = document.querySelector('#aiFilterInterests').value.trim();
+      const interests = document.getElementById('aiFilterInterests').value.trim();
       try {
         const result = await api('/api/ai/filter/interests', {
           method: 'PUT',
@@ -974,19 +1074,19 @@ small business: small business, smb, startup, freelancer"></textarea>
     async function loadTasks() {
       try {
         const tasks = await api('/api/tasks?limit=20');
-        const list = document.querySelector('#taskList');
+        const list = document.getElementById('taskList');
         if (!tasks.length) {
-          list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><h3>No tasks</h3><p>Background tasks appear here when data collection runs.</p></div>';
+          list.innerHTML = '<div class="text-center py-12 text-zinc-500"><div class="text-4xl mb-3 opacity-30">📭</div><h3 class="text-sm font-medium text-zinc-300 mb-2">No tasks</h3><p class="text-xs text-zinc-600">Background tasks appear here when data collection runs.</p></div>';
           return;
         }
         list.innerHTML = tasks.map(t => `
-          <div class="task-item ${t.status}">
-            <div class="task-icon">${t.status === 'completed' ? '✅' : t.status === 'running' ? '🔄' : t.status === 'failed' ? '❌' : '⏳'}</div>
-            <div class="task-info">
-              <strong>${t.task_type}</strong>
-              <span>${t.status} · ${timeAgo(t.created_at)}</span>
-              ${t.status === 'running' ? `<div class="task-progress"><div class="task-progress-fill" style="width:${t.progress}%"></div></div>` : ''}
-              ${t.error_message ? `<span style="color: var(--danger); font-size: 11px;">Error: ${t.error_message}</span>` : ''}
+          <div class="flex items-start gap-3 p-3 bg-zinc-900/80 border border-zinc-800/80 rounded-lg ${t.status === 'pending' ? 'border-l-2 border-l-zinc-500' : t.status === 'running' ? 'border-l-2 border-l-blue-500' : t.status === 'completed' ? 'border-l-2 border-l-green-500' : 'border-l-2 border-l-red-500'}">
+            <div class="text-base">${t.status === 'completed' ? '✅' : t.status === 'running' ? '🔄' : t.status === 'failed' ? '❌' : '⏳'}</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-mono text-xs font-medium text-zinc-200">${t.task_type}</div>
+              <div class="text-[11px] text-zinc-500">${t.status} · ${timeAgo(t.created_at)}</div>
+              ${t.status === 'running' ? `<div class="h-1 bg-zinc-800 rounded mt-2 overflow-hidden"><div class="h-full bg-orange-500 transition-all" style="width:${t.progress}%"></div></div>` : ''}
+              ${t.error_message ? `<div class="text-[11px] text-red-400 mt-1">Error: ${t.error_message}</div>` : ''}
             </div>
           </div>
         `).join('');
@@ -994,16 +1094,16 @@ small business: small business, smb, startup, freelancer"></textarea>
     }
 
     // ── Tab Navigation ──
-    document.querySelectorAll('nav button').forEach(btn => {
+    document.querySelectorAll('[data-tab]').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
-        document.querySelector(`#tab-${btn.dataset.tab}`).classList.add('active');
-
-        if (btn.dataset.tab === 'sources') { loadDataSources(); loadRssFeeds(); loadNotificationChannels(); loadScheduler(); }
-        if (btn.dataset.tab === 'llm') { loadLlMConfigs(); loadAiFilterInterests(); }
-        if (btn.dataset.tab === 'tasks') loadTasks();
+        const tab = btn.dataset.tab;
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        if (tab === 'sources') { loadDataSources(); loadRssFeeds(); loadNotificationChannels(); loadScheduler(); }
+        if (tab === 'llm') { loadLlMConfigs(); loadAiFilterInterests(); }
+        if (tab === 'tasks') loadTasks();
       });
     });
 
@@ -1018,10 +1118,10 @@ small business: small business, smb, startup, freelancer"></textarea>
       const map = { f: 'feed', i: 'import', s: 'sources', l: 'llm', t: 'tasks' };
       const tab = map[e.key.toLowerCase()];
       if (tab) {
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        const btn = document.querySelector(`nav button[data-tab="${tab}"]`);
-        if (btn) { btn.classList.add('active'); document.querySelector(`#tab-${tab}`).classList.add('active'); }
+        const btn = document.querySelector(`[data-tab="${tab}"]`);
+        if (btn) { btn.classList.add('active'); document.getElementById(`tab-${tab}`).classList.add('active'); }
       }
     });
 

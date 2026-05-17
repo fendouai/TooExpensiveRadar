@@ -171,10 +171,10 @@ def index() -> str:
 
 
 @app.post("/api/ingest/text", response_model=OpportunityRead)
-def ingest_text(req: TextIngestRequest, session: Session = Depends(get_session)) -> Opportunity:
+async def ingest_text(req: TextIngestRequest, session: Session = Depends(get_session)) -> Opportunity:
     if not req.content.strip():
         raise HTTPException(status_code=400, detail="content is required")
-    return _persist_analysis(session, req)
+    return await _persist_analysis(session, req)
 
 
 @app.post("/api/ingest/csv")
@@ -192,7 +192,7 @@ async def ingest_csv(file: UploadFile = File(...), session: Session = Depends(ge
             source_url=row.get("source_url") or "",
             author=row.get("author") or "",
         )
-        created.append(_persist_analysis(session, req).id)
+        created.append((await _persist_analysis(session, req)).id)
     return {"created": len(created), "ids": created}
 
 
@@ -240,7 +240,7 @@ Return ONLY valid JSON array."""
                 source_url=url,
                 author="",
             )
-            created.append(_persist_analysis(session, req).id)
+            created.append((await _persist_analysis(session, req)).id)
 
     return {"created": len(created), "ids": created}
 
@@ -321,9 +321,11 @@ SEED_COMMENTS = [
 
 @app.post("/api/seed")
 def seed(session: Session = Depends(get_session)) -> dict:
+    import asyncio
     created = []
     for text in SEED_COMMENTS:
-        created.append(_persist_analysis(session, TextIngestRequest(content=text, platform="seed")).id)
+        result = asyncio.run(_persist_analysis(session, TextIngestRequest(content=text, platform="seed")))
+        created.append(result.id)
     return {"created": len(created), "ids": created}
 
 
@@ -851,7 +853,7 @@ def list_tasks(
     return list(session.exec(stmt).all())
 
 
-def _persist_analysis(session: Session, req: TextIngestRequest) -> Opportunity:
+async def _persist_analysis(session: Session, req: TextIngestRequest) -> Opportunity:
     raw = RawSignal(
         platform=req.platform,
         source_url=req.source_url,
@@ -867,8 +869,7 @@ def _persist_analysis(session: Session, req: TextIngestRequest) -> Opportunity:
     if llm_config and llm_config.api_key:
         llm = get_llm(llm_config.provider, llm_config.api_key, llm_config.model, llm_config.base_url)
 
-    import asyncio
-    result = asyncio.run(analyze_text(req.content, llm))
+    result = await analyze_text(req.content, llm)
 
     complaint = Complaint(
         raw_signal_id=raw.id,
