@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ title }}</title>
+<style>
+  /* =============================================
+     FONTS — use system fonts to avoid embedding issues
+     ============================================= */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: #1a1a2e;
+  }
+
+  /* =============================================
+     PAGE LAYOUT — A4, margins, page numbers
+     ============================================= */
+  @page {
+    size: A4;
+    margin: 20mm 18mm 22mm 18mm;
+  }
+
+  @page :first {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  /* Cover page — no header/footer */
+  @page cover {
+    margin: 0;
+  }
+
+  /* Page headers and footers */
+  @top-center {
+    content: '{{ title }}';
+    font-size: 7pt;
+    color: #8896a6;
+    border-bottom: 0.5pt solid #e2e8f0;
+    padding-bottom: 4pt;
+    width: 100%;
+    margin-bottom: 6pt;
+  }
+
+  @bottom-center {
+    content: 'Page ' counter(page) ' of ' counter(pages);
+    font-size: 7.5pt;
+    color: #8896a6;
+    border-top: 0.5pt solid #e2e8f0;
+    padding-top: 4pt;
+  }
+
+  @bottom-left {
+    content: 'Too Expensive Radar · Confidential';
+    font-size: 7pt;
+    color: #8896a6;
+  }
+
+  /* =============================================
+     COVER PAGE
+     ============================================= */
+  .cover {
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40pt 44pt 36pt 44pt;
+    page: cover;
+    page-break-after: always;
+  }
+
+  .cover-top {
+    display: flex;
+    flex-direction: column;
+    gap: 12pt;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 0.5pt solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.85);
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4pt 10pt;
+    border-radius: 2pt;
+    width: fit-content;
+  }
+
+  .cover-title {
+    font-size: 26pt;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .cover-subtitle {
+    font-size: 13pt;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.4;
+    margin-top: 8pt;
+    max-width: 380pt;
+  }
+
+  .cover-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1pt;
+    background: rgba(255,255,255,0.08);
+    border: 0.5pt solid rgba(255,255,255,0.15);
+    border-radius: 4pt;
+    overflow: hidden;
+    margin-top: 20pt;
+  }
+
+  .cover-meta-item {
+    padding: 12pt 14pt;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .cover-meta-label {
+    font-size: 6.5pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 3pt;
+  }
+
+  .cover-meta-value {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .cover-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 8pt;
+  }
+
+  .cover-footer-text {
+    font-size: 7.5pt;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.5;
+  }
+
+  .cover-divider {
+    width: 100%;
+    height: 0.5pt;
+    background: rgba(255,255,255,0.15);
+    margin: 6pt 0;
+  }
+
+  /* =============================================
+     SECTION HEADERS
+     ============================================= */
+  .section {
+    page-break-before: auto;
+    padding-top: 4pt;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10pt;
+    margin-bottom: 14pt;
+    padding-bottom: 8pt;
+    border-bottom: 2pt solid #1a1a2e;
+  }
+
+  .section-number {
+    font-size: 7pt;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #8896a6;
+    text-transform: uppercase;
+  }
+
+  .section-title {
+    font-size: 15pt;
+    font-weight: 900;
+    color: #1a1a2e;
+    letter-spacing: -0.01em;
+  }
+
+  /* =============================================
+     EXECUTIVE SUMMARY
+     ============================================= */
+  .exec-summary {
+    background: #f8fafc;
+    border: 0.75pt solid #e2e8f0;
+    border-left: 3.5pt solid #2c5364;
+    border-radius: 4pt;
+    padding: 14pt 16pt;
+    margin-bottom: 16pt;
+  }
+
+  .exec-summary p {
+    font-size: 10pt;
+    line-height: 1.65;
+    color: #374151;
+    margin-bottom: 8pt;
+  }
+
+  .exec-summary p:last-child { margin-bottom: 0; }
+
+  .exec-summary strong { color: #1a1a2e; }
+
+  /* =============================================
+     METRICS GRID
+     ============================================= */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8pt;
+    margin-bottom: 16pt;
+  }
+
+  .metric-card {
+    background: #ffffff;
+    border: 0.75pt solid #e2e8f0;
+    border-radius: 4pt;
+    padding: 10pt 12pt;
+    text-align: center;
+  }
+
+  .metric-card.accent {
+    background: #2c5364;
+    border-color: #2c5364;
+  }
+
+  .metric-card.accent .metric-label { color: rgba(255,255,255,0.6); }
+  .metric-card.accent .metric-value { color: #ffffff; }
+
+  .metric-value {
+    font-size: 20pt;
+    font-weight: 900;
+    color: #1a1a2e;
+    line-height: 1;
+    margin-bottom: 3pt;
+  }
+
+  .metric-label {
+    font-size: 7pt;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8896a6;
+  }
+
+  /* =============================================
+     OPPORTUNITIES TABLE
+     ============================================= */
+  .opp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin-bottom: 16pt;
+  }
+
+  .opp-table thead th {
+    background: #1a1a2e;
+    color: #ffffff;
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7pt 8pt;
+    text-align: left;
+    border-bottom: 1pt solid #2c5364;
+  }
+
+  .opp-table thead th:first-child { border-radius: 3pt 0 0 0; }
+  .opp-table thead th:last-child { border-radius: 0 3pt 0 0; }
+
+  .opp-table tbody tr {
+    border-bottom: 0.5pt solid #f1f5f9;
+  }
+
+  .opp-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+
+  .opp-table tbody td {
+    padding: 8pt 8pt;
+    vertical-align: top;
+    color: #374151;
+  }
+
+  .opp-table tbody td.score {
+    font-weight: 900;
+    color: #2c5364;
+    font-size: 10pt;
+  }
+
+  .opp-table tbody td.software {
+    font-weight: 700;
+    color: #1a1a2e;
+    white-space: nowrap;
+  }
+
+  .opp-table tbody td.tag {
+    font-size: 7pt;
+    font-weight: 600;
+    background: #eef2f7;
+    color: #4a5568;
+    padding: 2pt 6pt;
+    border-radius: 2pt;
+    display: inline-block;
+  }
+
+  .opp-table tbody td.affiliate a {
+    color: #2c5364;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 7.5pt;
+  }
+
+  /* =============================================
+     OPPORTUNITY CARD (detailed)
+     ============================================= */
+  .opp-card {
+    border: 0.75pt solid #e2e8f0;
+    border-radius: 5pt;
+    padding: 12pt 14pt;
+    margin-bottom: 10pt;
+    page-break-inside: avoid;
+  }
+
+  .opp-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8pt;
+    gap: 8pt;
+  }
+
+  .opp-card-title {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+
+  .opp-card-score {
+    font-size: 14pt;
+    font-weight: 900;
+    color: #2c5364;
+    white-space: nowrap;
+  }
+
+  .opp-card-tag {
+    font-size: 6.5pt;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #eef2f7;
+    color: #4a5568;
+    padding: 2pt 6pt;
+    border-radius: 2pt;
+    margin-left: 8pt;
+  }
+
+  .opp-card-evidence {
+    font-size: 8.5pt;
+    color: #64748b;
+    border-left: 2pt solid #cbd5e1;
+    padding-left: 8pt;
+    margin: 8pt 0;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  .opp-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6pt;
+    margin-top: 8pt;
+  }
+
+  .opp-card-grid-item {}
+  .opp-card-grid-label {
+    font-size: 6.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin-bottom: 1pt;
+  }
+  .opp-card-grid-value {
+    font-size: 8.5pt;
+    color: #374151;
+    font-weight: 500;
+  }
+
+  .opp-card-grid-value.affiliate-link {
+    color: #2c5364;
+    font-weight: 700;
+  }
+
+  /* =============================================
+     PAIN POINTS BARS
+     ============================================= */
+  .pain-bar-container {
+    margin-bottom: 6pt;
+  }
+
+  .pain-bar-label {
+    font-size: 7.5pt;
+    color: #64748b;
+    margin-bottom: 2pt;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .pain-bar-track {
+    height: 5pt;
+    background: #e2e8f0;
+    border-radius: 3pt;
+    overflow: hidden;
+  }
+
+  .pain-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2c5364, #4a7c8f);
+    border-radius: 3pt;
+  }
+
+  /* =============================================
+     SWITCHER CHART
+     ============================================= */
+  .switcher-chart {
+    margin: 12pt 0;
+  }
+
+  .switcher-bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5pt;
+    gap: 8pt;
+  }
+
+  .switcher-name {
+    font-size: 8pt;
+    font-weight: 600;
+    color: #374151;
+    width: 70pt;
+    flex-shrink: 0;
+  }
+
+  .switcher-track {
+    flex: 1;
+    height: 12pt;
+    background: #e2e8f0;
+    border-radius: 2pt;
+    overflow: hidden;
+  }
+
+  .switcher-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2c5364, #3d6f80);
+    border-radius: 2pt;
+    display: flex;
+    align-items: center;
+    padding-left: 5pt;
+  }
+
+  .switcher-pct {
+    font-size: 7pt;
+    font-weight: 800;
+    color: white;
+  }
+
+  /* =============================================
+     PRICING TABLE
+     ============================================= */
+  .pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin: 10pt 0;
+  }
+
+  .pricing-table th {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 700;
+    padding: 6pt 8pt;
+    text-align: left;
+    border-bottom: 1pt solid #cbd5e1;
+    font-size: 7pt;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .pricing-table td {
+    padding: 6pt 8pt;
+    border-bottom: 0.5pt solid #f1f5f9;
+    color: #374151;
+    vertical-align: middle;
+  }
+
+  .pricing-table td.price {
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+
+  .pricing-table td.highlight {
+    background: rgba(44,83,100,0.06);
+    font-weight: 600;
+    color: #2c5364;
+  }
+
+  /* =============================================
+     CONCLUSION / RECOMMENDATIONS
+     ============================================= */
+  .conclusion-box {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 0.75pt solid #7dd3fc;
+    border-radius: 5pt;
+    padding: 14pt 16pt;
+    margin-top: 12pt;
+  }
+
+  .conclusion-box h3 {
+    font-size: 10pt;
+    font-weight: 800;
+    color: #0c4a6e;
+    margin-bottom: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .conclusion-box p {
+    font-size: 9pt;
+    color: #075985;
+    line-height: 1.6;
+    margin-bottom: 6pt;
+  }
+
+  .conclusion-box p:last-child { margin-bottom: 0; }
+
+  /* =============================================
+     FOOTNOTES / DISCLAIMER
+     ============================================= */
+  .disclaimer {
+    margin-top: 16pt;
+    padding-top: 10pt;
+    border-top: 0.5pt solid #e2e8f0;
+    font-size: 7pt;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+
+  /* =============================================
+     PAGE BREAK HELPERS
+     ============================================= */
+  .page-break { page-break-after: always; }
+  .no-break { page-break-inside: avoid; }
+
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     COVER PAGE
+     ============================================ -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-badge">{{ badge }}</div>
+    <div class="cover-title">{{ title }}</div>
+    <div class="cover-subtitle">{{ subtitle }}</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Issue</div>
+        <div class="cover-meta-value">{{ issue_number }}</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Published</div>
+        <div class="cover-meta-value">{{ publish_date }}</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Data Sources</div>
+        <div class="cover-meta-value">{{ total_signals|default(0)|int }} signals</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-divider"></div>
+    <div class="cover-footer-text">
+      Too Expensive Radar · AI-Native SaaS Replacement Intelligence<br>
+      Confidential · For authorized subscribers only
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     SECTION 1: EXECUTIVE SUMMARY
+     ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">§ 01</span>
+    <span class="section-title">Executive Summary</span>
+  </div>
+
+  <div class="exec-summary">
+    <p><strong>{{ summary_hook }}</strong></p>
+    <p>{{ summary_body }}</p>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric-card accent">
+      <div class="metric-value">{{ total_signals|default(0)|int }}</div>
+      <div class="metric-label">Signals Analyzed</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ opportunities_count }}</div>
+      <div class="metric-label">Opportunities</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ affiliate_ready }}</div>
+      <div class="metric-label">Affiliate Ready</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ top_score|string + '/10' if top_score else 'N/A' }}</div>
+      <div class="metric-label">Top Score</div>
+    </div>
+  </div>
+
+  <div class="conclusion-box">
+    <h3>Key Takeaway</h3>
+    <p>{{ key_takeaway }}</p>
+  </div>
+</div>
+
+<!-- ============================================
+     SECTION 2: TOP OPPORTUNITIES
+     ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">§ 02</span>
+    <span class="section-title">Top Affiliate Opportunities</span>
+  </div>
+
+  <p style="font-size:9pt;color:#64748b;margin-bottom:12pt;">
+    Ranked by disruption score. Each opportunity has a confirmed cheaper alternative with an active affiliate program.
+  </p>
+
+  {% for opp in top_opportunities %}
+  <div class="opp-card no-break">
+    <div class="opp-card-header">
+      <div>
+        <span class="opp-card-title">{{ opp.software }}</span>
+        <span class="opp-card-tag">{{ opp.category }}</span>
+      </div>
+      <div class="opp-card-score">{{ opp.score }}/10</div>
+    </div>
+
+    {% if opp.pain_bars %}
+    <div style="margin-bottom:8pt;">
+      {% for bar in opp.pain_bars %}
+      <div class="pain-bar-container">
+        <div class="pain-bar-label">
+          <span>{{ bar.label }}</span>
+          <span>{{ bar.value }}%</span>
+        </div>
+        <div class="pain-bar-track">
+          <div class="pain-bar-fill" style="width:{{ bar.value }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="opp-card-evidence">"{{ opp.evidence }}"</div>
+
+    <div class="opp-card-grid">
+      <div class="opp-card-grid-item">
+        <div class="opp-card-grid-label">Recommended Alternative</div>
+        <div class="opp-card-grid-value">{{ opp.alternative }}</div>
+      </div>
+      <div class="opp-card-grid-item">
+        <div class="opp-card-grid-label">Price Advantage</div>
+        <div class="opp-card-grid-value">{{ opp.price_advantage }}</div>
+      </div>
+      <div class="opp-card-grid-item">
+        <div class="opp-card-grid-label">AI Replacement</div>
+        <div class="opp-card-grid-value">{{ opp.replacement_wedge }}</div>
+      </div>
+      {% if opp.affiliate_url %}
+      <div class="opp-card-grid-item">
+        <div class="opp-card-grid-label">Affiliate Link</div>
+        <div class="opp-card-grid-value affiliate-link">{{ opp.affiliate_url }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ============================================
+     SECTION 3: SWITCHER ANALYSIS (Zapier example)
+     ============================================ -->
+{% if switcher_data %}
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">§ 03</span>
+    <span class="section-title">Switcher Analysis: {{ switcher_data.competitor }}</span>
+  </div>
+
+  <p style="font-size:9pt;color:#64748b;margin-bottom:10pt;">
+    Where {{ switcher_data.competitor }} users are going when they leave — based on community signals.
+  </p>
+
+  <div class="switcher-chart">
+    {% for item in switcher_data.switchers %}
+    <div class="switcher-bar-row">
+      <div class="switcher-name">{{ item.name }}</div>
+      <div class="switcher-track">
+        <div class="switcher-fill" style="width:{{ item.pct }}%">
+          <span class="switcher-pct">{{ item.pct }}%</span>
+        </div>
+      </div>
+      <div style="font-size:7.5pt;color:#64748b;width:90pt;">{{ item.price_tier }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if switcher_data.pricing_comparison %}
+  <table class="pricing-table">
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Monthly Min</th>
+        <th>Cost per Task</th>
+        <th>10K Tasks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in switcher_data.pricing_comparison %}
+      <tr class="{% if row.highlight %}highlight{% endif %}">
+        <td class="{% if row.highlight %}highlight{% endif %}">{{ row.platform }}</td>
+        <td>${{ row.monthly_min }}</td>
+        <td>${{ row.task_cost }}</td>
+        <td class="price">${{ row.ten_k_cost }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ============================================
+     SECTION 4: FULL OPPORTUNITIES TABLE
+     ============================================ -->
+{% if all_opportunities %}
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">§ 04</span>
+    <span class="section-title">All Opportunities</span>
+  </div>
+
+  <table class="opp-table">
+    <thead>
+      <tr>
+        <th style="width:36pt;">Score</th>
+        <th style="width:80pt;">Software</th>
+        <th style="width:60pt;">Category</th>
+        <th>Pain Summary</th>
+        <th style="width:80pt;">Alternative</th>
+        <th style="width:55pt;">Price Adv.</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in all_opportunities %}
+      <tr>
+        <td class="score">{{ row.score }}</td>
+        <td class="software">{{ row.software }}</td>
+        <td><span class="tag">{{ row.category }}</span></td>
+        <td>{{ row.pain_summary }}</td>
+        <td>{{ row.alternative }}</td>
+        <td>{{ row.price_advantage }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- ============================================
+     SECTION 5: METHODOLOGY
+     ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-number">§ 05</span>
+    <span class="section-title">Methodology</span>
+  </div>
+
+  <p style="font-size:9pt;color:#374151;line-height:1.7;margin-bottom:10pt;">
+    This report is generated automatically by the Too Expensive Radar system. Signals are collected from {{ total_signals|default(0)|int }} RSS sources and analyzed through a 3-layer funnel:
+  </p>
+
+  <table class="pricing-table" style="margin-top:8pt;">
+    <thead>
+      <tr>
+        <th>Funnel Layer</th>
+        <th>Description</th>
+        <th>Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in funnel_stats %}
+      <tr>
+        <td><strong>{{ row.layer }}</strong></td>
+        <td>{{ row.description }}</td>
+        <td class="price">{{ row.count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This report is for informational purposes only. Disruption scores and affiliate links are provided as-is. Too Expensive Radar does not guarantee the accuracy of third-party affiliate information. All trademarks belong to their respective owners. Report generated {{ publish_date }} using the Too Expensive Radar engine.
+  </div>
+</div>
+
+</body>
+</html>

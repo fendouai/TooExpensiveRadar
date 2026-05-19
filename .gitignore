@@ -100,3 +100,4 @@ too-expensive-radar-v1.zip
 
 # Node (if any frontend build)
 node_modules/
+.gstack/

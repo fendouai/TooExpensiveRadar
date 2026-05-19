@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, select
 
@@ -17,6 +17,9 @@ from app.analyzer import analyze_text
 from app.database import engine, get_session, init_db, settings
 from commercial.payments import CheckoutRequest, create_checkout_session, public_products
 from commercial.reports import build_report_preview
+from commercial.pdf_generator import get_pdf_bytes
+from commercial.publishers import GumroadPublisher, LemonsqueezyPublisher
+from pydantic import BaseModel
 from app.llm import get_llm
 from app.models import (
     AlternativeCandidate,
@@ -45,110 +48,139 @@ BASE_DIR = Path(__file__).resolve().parent
 COMMERCIAL_DIR = BASE_DIR.parent / "commercial"
 
 DEFAULT_RSS_FEEDS = [
-    # Tech News
-    {"url": "https://news.ycombinator.com/rss", "name": "Hacker News", "max_age_days": 7},
-    {"url": "https://techcrunch.com/feed/", "name": "TechCrunch", "max_age_days": 3},
-    {"url": "https://www.theverge.com/rss/index.xml", "name": "The Verge", "max_age_days": 3},
+    # === TECH NEWS (12 feeds) ===
+    {"url": "https://news.ycombinator.com/rss", "name": "Hacker News", "max_age_days": 3},
+    {"url": "https://techcrunch.com/feed/", "name": "TechCrunch", "max_age_days": 2},
+    {"url": "https://www.theverge.com/rss/index.xml", "name": "The Verge", "max_age_days": 2},
     {"url": "https://feeds.arstechnica.com/arstechnica/technology-lab", "name": "Ars Technica", "max_age_days": 3},
     {"url": "https://www.wired.com/feed/rss", "name": "Wired", "max_age_days": 3},
     {"url": "https://feeds.bbci.co.uk/news/technology/rss.xml", "name": "BBC Tech", "max_age_days": 3},
     {"url": "https://www.engadget.com/rss.xml", "name": "Engadget", "max_age_days": 3},
+    {"url": "https://www.businessinsider.com/rss", "name": "Business Insider Tech", "max_age_days": 2},
     {"url": "https://feeds.feedburner.com/TechCrunch", "name": "TechCrunch FeedBurner", "max_age_days": 3},
+    {"url": "https://www.siliconvalley.com/rss", "name": "Silicon Valley", "max_age_days": 3},
+    {"url": "https://www.theinformation.com/feed", "name": "The Information", "max_age_days": 2},
 
-    # AI & ML
-    {"url": "https://blogs.nvidia.com/feed/", "name": "NVIDIA Blog", "max_age_days": 7},
-    {"url": "https://blogs.vmware.com/feeds/regression", "name": "VMware AI Blog", "max_age_days": 7},
-    {"url": "https://aws.amazon.com/blogs/machine-learning/feed/", "name": "AWS ML Blog", "max_age_days": 7},
-    {"url": "https://blogs.microsoft.com/ai/feed/", "name": "Microsoft AI Blog", "max_age_days": 5},
-    {"url": "https://blog.google/technology/ai/feed/", "name": "Google AI Blog", "max_age_days": 5},
-    {"url": "https://deepmind.google/blog/rss.xml", "name": "Google DeepMind", "max_age_days": 7},
-    {"url": "https://ai.google/research/rss", "name": "Google Research AI", "max_age_days": 7},
-    {"url": "https://openai.com/blog/rss.xml", "name": "OpenAI Blog", "max_age_days": 5},
-    {"url": "https://anthropic.com/blog/rss.xml", "name": "Anthropic Blog", "max_age_days": 5},
+    # === AI & ML (10 feeds) ===
+    {"url": "https://blogs.nvidia.com/feed/", "name": "NVIDIA Blog", "max_age_days": 5},
+    {"url": "https://aws.amazon.com/blogs/machine-learning/feed/", "name": "AWS ML Blog", "max_age_days": 5},
+    {"url": "https://blogs.microsoft.com/ai/feed/", "name": "Microsoft AI Blog", "max_age_days": 3},
+    {"url": "https://blog.google/technology/ai/feed/", "name": "Google AI Blog", "max_age_days": 3},
+    {"url": "https://deepmind.google/blog/rss.xml", "name": "Google DeepMind", "max_age_days": 5},
+    {"url": "https://ai.google/research/rss", "name": "Google Research AI", "max_age_days": 5},
+    {"url": "https://openai.com/blog/rss.xml", "name": "OpenAI Blog", "max_age_days": 3},
+    {"url": "https://anthropic.com/blog/rss.xml", "name": "Anthropic Blog", "max_age_days": 3},
+    {"url": "https://venturebeat.com/category/ai/feed/", "name": "VentureBeat AI", "max_age_days": 2},
+    {"url": "https://www.artificialintelligence-news.com/feed/", "name": "AI News", "max_age_days": 2},
 
-    # Startups & Funding
-    {"url": "https://www.producthunt.com/feed", "name": "Product Hunt", "max_age_days": 3},
-    {"url": "https://feeds.feedburner.com/SouthChinaMorningPost", "name": "SCMP", "max_age_days": 7},
-    {"url": "https://www.ft.com/?format=rss", "name": "Financial Times Tech", "max_age_days": 3},
-    {"url": "https://www.theinformation.com/feed", "name": "The Information", "max_age_days": 3},
-    {"url": "https://www.wired.co.uk/rss", "name": "Wired UK", "max_age_days": 3},
-    {"url": "https://siliconangle.com/feed/", "name": "SiliconANGLE", "max_age_days": 3},
-    {"url": "https://www.techinasia.com/feed", "name": "Tech in Asia", "max_age_days": 3},
-
-    # Dev & OSS
-    {"url": "https://github.com/blog.atom", "name": "GitHub Blog", "max_age_days": 7},
+    # === DEV & OSS COMMUNITY (15 feeds) ===
+    {"url": "https://lobste.rs/rss", "name": "Lobsters", "max_age_days": 3},
+    {"url": "https://github.com/blog.atom", "name": "GitHub Blog", "max_age_days": 5},
+    {"url": "https://about.gitlab.com/feed/", "name": "GitLab Blog", "max_age_days": 5},
     {"url": "https://blog.cloudflare.com/feed/", "name": "Cloudflare Blog", "max_age_days": 5},
-    {"url": "https://about.gitlab.com/feed/", "name": "GitLab Blog", "max_age_days": 7},
-    {"url": "https://stackify.com/feed/", "name": "Stackify", "max_age_days": 7},
-    {"url": "https://devops.com/feed/", "name": "DevOps.com", "max_age_days": 7},
-    {"url": "https://www.infoq.com/feed/", "name": "InfoQ", "max_age_days": 5},
+    {"url": "https://www.infoq.com/feed/", "name": "InfoQ", "max_age_days": 3},
+    {"url": "https://dev.to/feed", "name": "DEV.to", "max_age_days": 2},
+    {"url": "https://hashnode.com/feed", "name": "Hashnode", "max_age_days": 3},
+    {"url": "https://www.indiehackers.com/feed", "name": "Indie Hackers", "max_age_days": 3},
+    {"url": "https://www.producthunt.com/feed", "name": "Product Hunt", "max_age_days": 2},
+    {"url": "https://devops.com/feed/", "name": "DevOps.com", "max_age_days": 5},
+    {"url": "https://stackoverflow.com/feeds", "name": "Stack Overflow", "max_age_days": 3},
+    {"url": "https://www.reddit.com/r/programming/.rss", "name": "r/programming", "max_age_days": 3},
+    {"url": "https://www.reddit.com/r/typescript/.rss", "name": "r/typescript", "max_age_days": 3},
+    {"url": "https://www.reddit.com/r/javascript/.rss", "name": "r/javascript", "max_age_days": 3},
 
-    # AI News Sites
-    {"url": "https://venturebeat.com/category/ai/feed/", "name": "VentureBeat AI", "max_age_days": 3},
-    {"url": "https://www.artificialintelligence-news.com/feed/", "name": "AI News", "max_age_days": 3},
-    {"url": "https://www.aitimejournal.com/feed", "name": "AI Time Journal", "max_age_days": 5},
-    {"url": "https://blog.cloudsight.ai/feed/", "name": "CloudSight AI", "max_age_days": 7},
-    {"url": "https://blogs.nvidia.com/feed/", "name": "NVIDIA AI Blog", "max_age_days": 5},
+    # === REDDIT: SaaS & BUSINESS COMPLAINTS (20 feeds) ===
+    {"url": "https://www.reddit.com/r/SaaS/.rss", "name": "r/SaaS", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/startups/.rss", "name": "r/startups", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/entrepreneur/.rss", "name": "r/entrepreneur", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/smallbusiness/.rss", "name": "r/smallbusiness", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/indiehackers/.rss", "name": "r/indiehackers", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/founder/.rss", "name": "r/founder", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/SideProject/.rss", "name": "r/SideProject", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/growthhacking/.rss", "name": "r/growthhacking", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/marketing/.rss", "name": "r/marketing", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/SEO/.rss", "name": "r/SEO", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/crm/.rss", "name": "r/crm", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/projectmanagement/.rss", "name": "r/projectmanagement", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/productivity/.rss", "name": "r/productivity", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/webdev/.rss", "name": "r/webdev", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/webdesigner/.rss", "name": "r/webdesigner", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/Frontend/.rss", "name": "r/Frontend", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/EntrepreneurRideAlong/.rss", "name": "r/EntrepreneurRideAlong", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/legaladvice/.rss", "name": "r/legaladvice", "max_age_days": 7},
+    {"url": "https://www.reddit.com/r/sales/.rss", "name": "r/sales", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/ecommerce/.rss", "name": "r/ecommerce", "max_age_days": 5},
 
-    # Crypto & Web3
-    {"url": "https://coindesk.com/feed", "name": "CoinDesk", "max_age_days": 3},
-    {"url": "https://cointelegraph.com/rss", "name": "CoinTelegraph", "max_age_days": 3},
+    # === REDDIT: SPECIFIC TOOL COMPLAINTS (15 feeds) ===
+    {"url": "https://www.reddit.com/r/SaaShosting/.rss", "name": "r/SaaShosting", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/salesforce/.rss", "name": "r/salesforce", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/jira/.rss", "name": "r/jira", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/zapier/.rss", "name": "r/zapier", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/notion/.rss", "name": "r/notion", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/Asana/.rss", "name": "r/Asana", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/trello/.rss", "name": "r/trello", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/Pipedrive/.rss", "name": "r/Pipedrive", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/zendesk/.rss", "name": "r/zendesk", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/hubspot/.rss", "name": "r/hubspot", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/slack/.rss", "name": "r/slack", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/zoom/.rss", "name": "r/zoom", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/gsuite/.rss", "name": "r/gsuite", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/office365/.rss", "name": "r/office365", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/aws/.rss", "name": "r/aws", "max_age_days": 5},
 
-    # Security
-    {"url": "https://feeds.feedburner.com/TheHackersNews", "name": "The Hacker News", "max_age_days": 3},
-    {"url": "https://www.darkreading.com/rss.xml", "name": "Dark Reading", "max_age_days": 5},
-    {"url": "https://www.theregister.com/security/headlines.atom", "name": "The Register Security", "max_age_days": 5},
+    # === REDDIT: AI & TECH DISCUSSIONS (12 feeds) ===
+    {"url": "https://www.reddit.com/r/artificial/.rss", "name": "r/artificial", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/MachineLearning/.rss", "name": "r/MachineLearning", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/deeplearning/.rss", "name": "r/deeplearning", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/ChatGPT/.rss", "name": "r/ChatGPT", "max_age_days": 3},
+    {"url": "https://www.reddit.com/r/LocalLLaMA/.rss", "name": "r/LocalLLaMA", "max_age_days": 3},
+    {"url": "https://www.reddit.com/r/LLMs/.rss", "name": "r/LLMs", "max_age_days": 3},
+    {"url": "https://www.reddit.com/r/LocalAI/.rss", "name": "r/LocalAI", "max_age_days": 3},
+    {"url": "https://www.reddit.com/r/cscareerquestions/.rss", "name": "r/cscareerquestions", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/sysadmin/.rss", "name": "r/sysadmin", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/devops/.rss", "name": "r/devops", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/cloud/.rss", "name": "r/cloud", "max_age_days": 5},
+    {"url": "https://www.reddit.com/r/docker/.rss", "name": "r/docker", "max_age_days": 5},
 
-    # Community - Reddit (SaaS/Pricing complaints)
-    {"url": "https://www.reddit.com/r/SaaS/hot.rss", "name": "r/SaaS", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/startups/hot.rss", "name": "r/startups", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/entrepreneur/hot.rss", "name": "r/entrepreneur", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/smallbusiness/hot.rss", "name": "r/smallbusiness", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/webdev/hot.rss", "name": "r/webdev", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/webdesigner/hot.rss", "name": "r/webdesigner", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/Frontend/hot.rss", "name": "r/Frontend", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/SideProject/hot.rss", "name": "r/SideProject", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/indiehackers/hot.rss", "name": "r/indiehackers", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/growthhacking/hot.rss", "name": "r/growthhacking", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/marketing/hot.rss", "name": "r/marketing", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/SEO/hot.rss", "name": "r/SEO", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/crm/hot.rss", "name": "r/crm", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/projectmanagement/hot.rss", "name": "r/projectmanagement", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/productivity/hot.rss", "name": "r/productivity", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/EntrepreneurRideAlong/hot.rss", "name": "r/EntrepreneurRideAlong", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/founder/hot.rss", "name": "r/founder", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/legaladvice/hot.rss", "name": "r/legaladvice", "max_age_days": 14},
+    # === SECURITY (5 feeds) ===
+    {"url": "https://feeds.feedburner.com/TheHackersNews", "name": "The Hacker News", "max_age_days": 2},
+    {"url": "https://www.darkreading.com/rss.xml", "name": "Dark Reading", "max_age_days": 3},
+    {"url": "https://www.theregister.com/security/headlines.atom", "name": "The Register Security", "max_age_days": 3},
+    {"url": "https://www.schneier.com/blog/atom.xml", "name": "Schneier on Security", "max_age_days": 5},
+    {"url": "https://krebsonsecurity.com/feed/", "name": "Krebs on Security", "max_age_days": 3},
 
-    # Community - Reddit (Tech/AI discussions)
-    {"url": "https://www.reddit.com/r/artificial/hot.rss", "name": "r/artificial", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/MachineLearning/hot.rss", "name": "r/MachineLearning", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/deeplearning/hot.rss", "name": "r/deeplearning", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/ChatGPT/hot.rss", "name": "r/ChatGPT", "max_age_days": 5},
-    {"url": "https://www.reddit.com/r/LocalLLaMA/hot.rss", "name": "r/LocalLLaMA", "max_age_days": 5},
-    {"url": "https://www.reddit.com/r/LLMs/hot.rss", "name": "r/LLMs", "max_age_days": 5},
-    {"url": "https://www.reddit.com/r//programming/hot.rss", "name": "r/programming", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/cscareerquestions/hot.rss", "name": "r/cscareerquestions", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/sysadmin/hot.rss", "name": "r/sysadmin", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/devops/hot.rss", "name": "r/devops", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/aws/hot.rss", "name": "r/aws", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/cloud/hot.rss", "name": "r/cloud", "max_age_days": 7},
+    # === STARTUP & BUSINESS NEWS (8 feeds) ===
+    {"url": "https://www.techinasia.com/feed", "name": "Tech in Asia", "max_age_days": 3},
+    {"url": "https://siliconangle.com/feed/", "name": "SiliconANGLE", "max_age_days": 3},
+    {"url": "https://www.ft.com/?format=rss", "name": "Financial Times Tech", "max_age_days": 3},
+    {"url": "https://www.wired.co.uk/rss", "name": "Wired UK", "max_age_days": 3},
+    {"url": "https://mixergy.com/feed/", "name": "Mixergy Podcast", "max_age_days": 7},
+    {"url": "https://feeds.feedburner.com/SouthChinaMorningPost", "name": "SCMP", "max_age_days": 5},
+    {"url": "https://www.alleywatch.com/feed/", "name": "AlleyWatch", "max_age_days": 3},
 
-    # Community - Reddit (Business/Tools complaints)
-    {"url": "https://www.reddit.com/r/SaaShosting/hot.rss", "name": "r/SaaShosting", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/salesforce/hot.rss", "name": "r/salesforce", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/jira/hot.rss", "name": "r/jira", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/zapier/hot.rss", "name": "r/zapier", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/notion/hot.rss", "name": "r/notion", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/Asana/hot.rss", "name": "r/Asana", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/trello/hot.rss", "name": "r/trello", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/Pipedrive/hot.rss", "name": "r/Pipedrive", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/zendesk/hot.rss", "name": "r/zendesk", "max_age_days": 7},
-    {"url": "https://www.reddit.com/r/hubspot/hot.rss", "name": "r/hubspot", "max_age_days": 7},
+    # === YOUTUBE & VIDEO COMMENTS (via yt rss - video complaints) (5 feeds) ===
+    {"url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCsBjURrPoezykLs9EqgamOA", "name": "YouTube: TechQuickie", "max_age_days": 7},
+    {"url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYP01IT9PkYGK6lX4f9HA", "name": "YouTube: LowEndBox", "max_age_days": 7},
+    {"url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCpMsRL6LiB7lvC0oMy2kZ8g", "name": "YouTube: AustinEvans", "max_age_days": 7},
+    {"url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCCogitoYIwYwBjY9jTMlg9w", "name": "YouTube: MKBHD", "max_age_days": 7},
+    {"url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCsUcy4mV4sAqw3qV4_KkgLw", "name": "YouTube: ReviewTech", "max_age_days": 7},
 
-    # Community - Other forums
-    {"url": "https://www.producthunt.com/feed", "name": "Product Hunt", "max_age_days": 3},
-    {"url": "https://news.ycombinator.com/rss", "name": "Hacker News", "max_age_days": 7},
-    {"url": "https://www.indiehackers.com/feed", "name": "Indie Hackers", "max_age_days": 5},
+    # === NEWSLETTER & BLOG AGGREGATORS (5 feeds) ===
+    {"url": "https://www.lennysnewsletter.com/feed", "name": "Lenny's Newsletter", "max_age_days": 5},
+    {"url": "https://stratechery.com/feed/", "name": "Stratechery", "max_age_days": 5},
+    {"url": "https://mailchi.mp/feed", "name": "Mailchimp Newsletter", "max_age_days": 5},
+    {"url": "https://buttondown.email/feed", "name": "Buttondown RSS", "max_age_days": 5},
+    {"url": "https://convertkit.com/feed", "name": "ConvertKit", "max_age_days": 5},
+
+    # === CRYPTO & WEB3 (3 feeds) ===
+    {"url": "https://coindesk.com/feed", "name": "CoinDesk", "max_age_days": 2},
+    {"url": "https://cointelegraph.com/rss", "name": "CoinTelegraph", "max_age_days": 2},
+    {"url": "https://decrypt.co/feed", "name": "Decrypt", "max_age_days": 2},
+
+    # === SPANISH & CHINESE TECH (3 feeds) - for non-English SaaS complaints ===
+    {"url": "https://wwwhatsnew.com/feed", "name": "WWWhatsnew (ES)", "max_age_days": 5},
+    {"url": "https://www.genbeta.com/feed", "name": "Genbeta (ES)", "max_age_days": 5},
+    {"url": "https://36kr.com/feed", "name": "36kr (CN)", "max_age_days": 3},
 ]
 
 
@@ -187,6 +219,82 @@ def commercial_report(session: Session = Depends(get_session)) -> dict:
 @app.get("/api/commercial/products")
 def commercial_products() -> dict:
     return {"products": public_products()}
+
+
+@app.get("/api/commercial/report/pdf")
+def commercial_report_pdf(session: Session = Depends(get_session)) -> Response:
+    try:
+        pdf_bytes = get_pdf_bytes(session)
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc) + " Install with: pip install weasyprint",
+        )
+    from fastapi.responses import Response
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                "attachment; filename="
+                "too-expensive-radar-report.pdf"
+            )
+        },
+    )
+
+
+class PublishRequest(BaseModel):
+    platform: str = "gumroad"
+    price_usd: int = 49
+
+
+@app.post("/api/commercial/publish")
+def commercial_publish(req: PublishRequest, session: Session = Depends(get_session)) -> dict:
+    try:
+        pdf_bytes = get_pdf_bytes(session)
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        )
+
+    from commercial.pdf_generator import gather_report_data
+    data = gather_report_data(session)
+    issue = data.get("issue_number", "001")
+    title = data.get("title", "Too Expensive Radar")
+    summary = data.get("summary_hook", "")
+
+    name = f"{title} {issue}"
+    description = f"{summary}\n\n{summary}\n\nThis report is generated automatically from pricing pain signals across the SaaS ecosystem."
+
+    if req.platform == "gumroad":
+        try:
+            pub = GumroadPublisher()
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        result = pub.create_product(
+            name=name,
+            price=req.price_usd,
+            description=description,
+            published=True,
+        )
+        return {"platform": "gumroad", "result": result}
+
+    elif req.platform == "lemonsqueezy":
+        try:
+            pub = LemonsqueezyPublisher()
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        result = pub.create_product(
+            name=name,
+            price=req.price_usd * 100,
+            description=description,
+        )
+        checkout_url = pub.get_checkout_url(result["variant"]["id"])
+        return {"platform": "lemonsqueezy", "result": result, "checkout_url": checkout_url}
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown platform: {req.platform}")
 
 
 @app.post("/api/commercial/checkout")
