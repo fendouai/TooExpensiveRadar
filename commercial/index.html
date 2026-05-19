@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Too Expensive Radar Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #10131a;
+      --muted: #69707d;
+      --line: #e8e2d8;
+      --paper: #fbfaf7;
+      --panel: #ffffff;
+      --accent: #23624b;
+      --accent-2: #b85c38;
+      --wash: #f4efe6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    a { color: inherit; }
+    .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+    header {
+      min-height: 78vh;
+      display: grid;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(35,98,75,.12), transparent 38%),
+        linear-gradient(315deg, rgba(184,92,56,.12), transparent 36%),
+        var(--paper);
+    }
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(16,19,26,.08);
+      background: rgba(251,250,247,.86);
+      backdrop-filter: blur(18px);
+    }
+    .nav-inner {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { font-weight: 700; letter-spacing: .01em; }
+    .nav-links { display: flex; align-items: center; gap: 18px; color: var(--muted); font-size: 14px; }
+    .hero { padding: 84px 0 20px; display: grid; gap: 36px; grid-template-columns: minmax(0, .98fr) minmax(340px, 1.02fr); }
+    .eyebrow { color: var(--accent); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .12em; }
+    h1 { margin: 12px 0 14px; font-size: clamp(38px, 5.1vw, 54px); line-height: .98; letter-spacing: 0; max-width: 680px; }
+    .lead { font-size: clamp(16px, 1.7vw, 18px); color: #3e4550; max-width: 620px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    button, .button {
+      border: 0;
+      border-radius: 8px;
+      padding: 13px 18px;
+      font-weight: 750;
+      cursor: pointer;
+      font-size: 14px;
+      min-height: 46px;
+    }
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+    .report-sheet {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 24px 70px rgba(67, 57, 38, .12);
+    }
+    .sheet-top { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 18px; }
+    .stamp { color: var(--accent-2); font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+    .metric { background: var(--wash); border-radius: 8px; padding: 14px; }
+    .metric strong { display: block; font-size: 26px; line-height: 1; }
+    .metric span { color: var(--muted); font-size: 12px; }
+    main { padding: 72px 0; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+    h2 { margin: 0; font-size: clamp(30px, 4vw, 48px); letter-spacing: 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 260px;
+    }
+    .card h3 { margin: 0 0 8px; font-size: 20px; }
+    .tag { display: inline-flex; color: var(--accent); background: rgba(35,98,75,.1); border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 700; }
+    .score { font-size: 34px; font-weight: 850; margin: 16px 0 4px; }
+    .muted { color: var(--muted); }
+    .proof { border-left: 2px solid var(--accent-2); padding-left: 12px; color: #4f5661; font-size: 14px; margin: 16px 0; }
+    .pricing { margin-top: 72px; display: grid; grid-template-columns: .9fr 1.1fr; gap: 28px; align-items: start; }
+    .plans { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .plan { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
+    .price { font-size: 38px; font-weight: 850; margin: 8px 0; }
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 13px 14px;
+      min-height: 46px;
+      font: inherit;
+      margin: 12px 0;
+    }
+    .notice { margin-top: 14px; color: var(--muted); font-size: 13px; min-height: 20px; }
+    footer { border-top: 1px solid var(--line); padding: 28px 0; color: var(--muted); font-size: 13px; }
+    @media (max-width: 860px) {
+      .hero, .pricing { grid-template-columns: 1fr; }
+      header { min-height: auto; }
+      .grid, .plans { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      .nav-links a { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="shell nav-inner">
+      <div class="brand">Too Expensive Radar Report</div>
+      <div class="nav-links">
+        <a href="#sample">Sample</a>
+        <a href="#pricing">Pricing</a>
+        <button class="primary" onclick="scrollToPricing()">Buy report</button>
+      </div>
+    </div>
+  </nav>
+
+  <header>
+    <div class="shell hero">
+      <section>
+        <div class="eyebrow">Commercial model: recurring paid intelligence</div>
+        <h1>Overpriced SaaS complaints, turned into a sellable opportunity report.</h1>
+        <p class="lead">The product is simple: a weekly or monthly brief for founders and affiliate operators who want validated replacement ideas, evidence links, and monetization paths without running the radar themselves.</p>
+        <div class="actions">
+          <button class="primary" onclick="scrollToPricing()">Buy the report</button>
+          <a class="button secondary" href="#sample">Read live sample</a>
+        </div>
+      </section>
+
+      <aside class="report-sheet" aria-live="polite">
+        <div class="sheet-top">
+          <div>
+            <div class="stamp">Live radar snapshot</div>
+            <strong id="sheetTitle">Loading report...</strong>
+          </div>
+          <span class="muted" id="generatedAt"></span>
+        </div>
+        <p id="positioning" class="muted">Reading current opportunities from the open-source radar.</p>
+        <div class="metrics">
+          <div class="metric"><strong id="metricOpps">0</strong><span>ranked leads</span></div>
+          <div class="metric"><strong id="metricAff">0</strong><span>affiliate ready</span></div>
+          <div class="metric"><strong id="metricCat">-</strong><span>top category</span></div>
+        </div>
+        <div id="included"></div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section id="sample">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Sample output</div>
+          <h2>What buyers get immediately</h2>
+        </div>
+        <p class="muted">Pulled from the same database as the open-source app.</p>
+      </div>
+      <div id="opportunities" class="grid"></div>
+    </section>
+
+    <section id="pricing" class="pricing">
+      <div>
+        <div class="eyebrow">Recommended business model</div>
+        <h2>Start with paid reports, then graduate to custom research.</h2>
+        <p class="muted">This is the cleanest first monetization path because the current product already creates data advantage. You sell interpretation and convenience before building a full SaaS account system.</p>
+      </div>
+      <div class="plans">
+        <article class="plan">
+          <span class="tag">Validate demand</span>
+          <h3>Single report</h3>
+          <div class="price">$49</div>
+          <p class="muted">One curated Too Expensive Radar PDF/data brief.</p>
+          <input id="singleEmail" type="email" placeholder="buyer@email.com" />
+          <button class="primary" onclick="checkout('single_report', 'singleEmail')">Buy single report</button>
+          <div class="notice" id="singleNotice"></div>
+        </article>
+        <article class="plan">
+          <span class="tag">Best fit</span>
+          <h3>Monthly brief</h3>
+          <div class="price">$149/mo</div>
+          <p class="muted">Recurring report with fresh opportunities and affiliate-ready leads.</p>
+          <input id="monthlyEmail" type="email" placeholder="buyer@email.com" />
+          <button class="primary" onclick="checkout('monthly', 'monthlyEmail')">Subscribe monthly</button>
+          <div class="notice" id="monthlyNotice"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">Powered by the open-source Too Expensive Radar engine. Payments are created server-side through Dodo Payments hosted checkout.</div>
+  </footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function scrollToPricing() {
+      document.querySelector('#pricing').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function trimText(text, max) {
+      if (!text) return '';
+      return text.length > max ? text.slice(0, max - 1) + '...' : text;
+    }
+
+    async function loadReport() {
+      const res = await fetch('/api/commercial/report');
+      const data = await res.json();
+      $('sheetTitle').textContent = data.positioning.best_offer;
+      $('positioning').textContent = data.positioning.why;
+      $('generatedAt').textContent = new Date(data.generated_at).toLocaleDateString();
+      $('metricOpps').textContent = data.summary.opportunities;
+      $('metricAff').textContent = data.summary.affiliate_ready;
+      $('metricCat').textContent = data.summary.top_category.split('/')[0].trim();
+      $('included').innerHTML = data.products.map((p) => `<p class="muted">• ${p}</p>`).join('');
+      $('opportunities').innerHTML = data.opportunities.length
+        ? data.opportunities.slice(0, 6).map(renderOpportunity).join('')
+        : '<article class="card"><h3>No radar data yet</h3><p class="muted">Use the open-source app to fetch RSS or seed examples, then this page will show live report output.</p></article>';
+    }
+
+    function renderOpportunity(item) {
+      const source = item.source_url ? `<a class="muted" href="${item.source_url}" target="_blank" rel="noreferrer">source</a>` : '<span class="muted">internal signal</span>';
+      return `
+        <article class="card">
+          <span class="tag">${item.category}</span>
+          <div class="score">${item.score}</div>
+          <h3>${item.software}</h3>
+          <p class="muted">${trimText(item.replacement || item.workflow, 128)}</p>
+          <p class="proof">${trimText(item.evidence || item.pain, 150)}</p>
+          <p><strong>${item.alternative || 'Replacement wedge'}</strong></p>
+          <p class="muted">${trimText(item.price_advantage, 88)}</p>
+          ${source}
+        </article>`;
+    }
+
+    async function checkout(plan, emailId) {
+      const notice = plan === 'monthly' ? $('monthlyNotice') : $('singleNotice');
+      notice.textContent = 'Creating secure checkout...';
+      const email = $(emailId).value.trim() || null;
+      const res = await fetch('/api/commercial/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, email })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.configured) {
+        const detail = data.detail && typeof data.detail === 'object' ? data.detail : data;
+        const missing = detail.missing && detail.missing.length ? ` Missing: ${detail.missing.join(', ')}` : '';
+        notice.textContent = (detail.message || 'Dodo Payments is not configured yet.') + missing;
+        return;
+      }
+      window.location.href = data.checkout_url;
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>

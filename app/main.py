@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import httpx
 import json
 from contextlib import asynccontextmanager, contextmanager
 from io import StringIO
@@ -14,6 +15,8 @@ from sqlmodel import Session, select
 
 from app.analyzer import analyze_text
 from app.database import engine, get_session, init_db, settings
+from commercial.payments import CheckoutRequest, create_checkout_session, public_products
+from commercial.reports import build_report_preview
 from app.llm import get_llm
 from app.models import (
     AlternativeCandidate,
@@ -39,6 +42,7 @@ from app.scrapers import get_scraper
 from app.scrapers.rss_fetcher import RSSFetcher, parse_multi_account_config, limit_accounts
 
 BASE_DIR = Path(__file__).resolve().parent
+COMMERCIAL_DIR = BASE_DIR.parent / "commercial"
 
 DEFAULT_RSS_FEEDS = [
     # Tech News
@@ -168,6 +172,38 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
     return (BASE_DIR / "static" / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/commercial", response_class=HTMLResponse)
+def commercial_index() -> str:
+    return (COMMERCIAL_DIR / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/api/commercial/report")
+def commercial_report(session: Session = Depends(get_session)) -> dict:
+    return build_report_preview(session)
+
+
+@app.get("/api/commercial/products")
+def commercial_products() -> dict:
+    return {"products": public_products()}
+
+
+@app.post("/api/commercial/checkout")
+async def commercial_checkout(req: CheckoutRequest) -> dict:
+    try:
+        result = await create_checkout_session(req)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except httpx.HTTPStatusError as exc:
+        detail = exc.response.text[:500] if exc.response else str(exc)
+        raise HTTPException(status_code=502, detail=f"Dodo checkout failed: {detail}") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"Dodo checkout failed: {exc}") from exc
+
+    if not result.get("configured"):
+        raise HTTPException(status_code=503, detail=result)
+    return result
 
 
 @app.post("/api/ingest/text", response_model=OpportunityRead)
